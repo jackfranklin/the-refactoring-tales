@@ -302,3 +302,190 @@ Abstracting code out into functions is one of the easiest and most effective way
 ## Step Back
 
 We are far from done with these tabs, but I want you to notice how, even after just a couple of small changes, the code is now already in an improved position than when we picked it up. We have removed duplication of selectors and code, and made the code more self documenting and readable along the way. When refactoring, you should be in a position to stop the refactoring at any point, and move onto something else. If this was a real project, and suddenly I was called to an urgent bug in another project, I could commit this code now and still have improved it. You should never find yourself in such a mess that you can't put the code down and come back later. This is vital to successful refactorings: keep them small and contained.
+
+## Higher level duplication
+
+The code we've been working with has two blocks:
+
+```js
+if(active) {
+  // do tab things
+};
+
+tabLinks.click(function() {
+  // do tab things
+};
+```
+
+Although it doesn't look like it at a glance, there's a lot of duplication going on - both those blocks of code perform basically the same task. This can be sometimes hard to spot, as it can be hidden behind code that doesn't immediately look the same.
+
+```js
+var tabsWrapper = $(".tabs");
+var tabs = tabsWrapper.children("div");
+var tabLinks = tabsWrapper.find(".tab-link");
+var activeClass = "active";
+var activateLink = function(elem) {
+  $("." + activeClass).removeClass(activeClass);
+  $(elem).addClass(activeClass);
+};
+
+var active = location.hash;
+if(active) {
+  tabs.hide();
+  $(active).show();
+  tabLinks.each(function() {
+    if($(this).attr("href") === active) {
+      activateLink($(this).parent());
+    }
+  });
+}
+tabLinks.click(function() {
+  tabs.hide();
+  $($(this).attr("href")).show();
+  activateLink($(this).parent());
+  return false;
+});
+```
+
+Now I've given you the primer, take another look over the code above. Notice how both blocks do the same thing:
+
+- hide all the tabs
+- find and show a specific tab
+- update the link for that tab with a new class
+
+The duplication is obscured somewhat because of the need for the `tabLinks.each` in the first block, but this doesn't mean that we can't abstract that duplication into a function.
+
+Sticking with our mantra of making small steps, let's first make a function that shows a specific tab. Sticking with the naming conventions, we'll call it `activateTab`:
+
+```js
+var activateTab = function(tabSelector) {
+  tabs.hide();
+  $(tabSelector).show();
+};
+```
+
+This function takes a selector and shows it, after hiding all of the tabs first. We can now use this in both the `if(active)` block and in the event handler:
+
+```js
+var tabsWrapper = $(".tabs");
+var tabs = tabsWrapper.children("div");
+var tabLinks = tabsWrapper.find(".tab-link");
+var activeClass = "active";
+
+var activateLink = function(elem) {
+  $("." + activeClass).removeClass(activeClass);
+  $(elem).addClass(activeClass);
+};
+
+var activateTab = function(tabSelector) {
+  tabs.hide();
+  $(tabSelector).show();
+};
+
+var active = location.hash;
+if(active) {
+  activateTab(active);
+  tabLinks.each(function() {
+    if($(this).attr("href") === active) {
+      activateLink($(this).parent());
+    }
+  });
+}
+tabLinks.click(function() {
+  activateTab($(this).attr("href"));
+  activateLink($(this).parent());
+  return false;
+});
+```
+
+We're really motoring now. Notice how the tabLinks event handler simply calls two other functions, and has very little in it. This is a good sign that we're on the right tracks. [Ben Orenstein](http://codeulate.com/), a developer who speaks a huge amount on refactoring, says that a function with one line inside is superior to a function with two lines, which in turn is superior to a function with three lines, and so on. [Sandi Metz](http://www.sandimetz.com/), a well known Ruby developer, defined a [set of rules](http://robots.thoughtbot.com/sandi-metz-rules-for-developers) that help when building large projects, one of which is: "Methods can be no longer than five lines of code.". Regardless of if you think five is a good or bad number for that rule, the point stands: short, small functions are nearly always preferable to large ones. Keep functions small and compose larger functions out of calling lots of little ones.
+
+Before we continue, notice again how if we wanted to stop now, we could. It's so important to not let yourself get down a huge rabbit hole of refactoring.
+
+## Merging the branches 
+
+Right now we have two branches in our code, the `if(active)` part and the event handler. I'd really like to try and get these into one, or at least make the branches as small as possible. Right now they still have duplication, they noth call `activateTab` and `activateLink`. I'd really like to abstract that out into another function, but right now the obvious step isn't that obvious. Sometimes you'll reach a point like this when you're coding, where you know waht you need to do or want to do, but the step isn't obvious. Often you'll have to make another change, to make the new change easier. In their book [Refactoring](http://refactoring.com/), Martin Fowler and Kent Beck put this nicely:
+
+> When you find you have to add a feature to a program, and the program's code is not structured in a convenient way to add the feature, first refactor the program to make it easy to add the feature, then add the feature.
+
+Although this quote talks about new features, what it efffectively says is that if you need to make a change, but that change is proving tough to make, make other changes such that your original change is easy.
+
+I realised after some thinking that the bit of code making this change difficult is this bit:
+
+```js
+tabLinks.each(function() {
+  if($(this).attr("href") === active) {
+    activateLink($(this).parent());
+  }
+});
+```
+
+The fact that we have to loop over means we can't just abstract out as easily. Instead of the `each`, we can instead use jQuery's `filter` method:
+
+```js
+var link = tabLinks.filter(function() { 
+  return $(this).attr("href") === active;
+}.parent());
+activateLink(link);
+```
+
+We now filter over the tab links, looking for the one that matches the `active` hash, and get at the item that way instead. I can store the result of that to a variable, and then pass `activateLink` that element. Adding that change into our code gives us:
+
+```js
+var tabsWrapper = $(".tabs");
+var tabs = tabsWrapper.children("div");
+var tabLinks = tabsWrapper.find(".tab-link");
+var activeClass = "active";
+
+var activateLink = function(elem) {
+  $("." + activeClass).removeClass(activeClass);
+  $(elem).addClass(activeClass);
+};
+
+var activateTab = function(tabSelector) {
+  tabs.hide();
+  $(tabSelector).show();
+};
+
+var active = location.hash;
+if(active) {
+  activateTab(active);
+  var link = tabLinks.filter(function() { 
+    return $(this).attr("href") === active;
+  }.parent());
+  activateLink(link);
+}
+tabLinks.click(function() {
+  activateTab($(this).attr("href"));
+  activateLink($(this).parent());
+  return false;
+});
+```
+
+Now, to see where the next change will come from, we need to examine a bit more closely the `activateLink` and `activateTab` function. Ideally, I'd like to encapsulate these into another function, but to do that we need to see what each function needs as a parameter. `activateTab` just takes a selector and uses that to hide and show what's required, but `activateLink` actually takes in an element. However, if you look closely, you'll note that there is a relationship between the `activateTab` parameter and the `activateLink` parameter. The `activateLink` is the parent of the element whose selector we pass into `activateTab`. So why don't we pass the selector into `activateLink`, and let it find the exact element it needs?
+
+```js
+var activateLink = function(selector) {
+  $("." + activeClass).removeClass(activeClass);
+  var elem = tabLinks.filter(function() { 
+    return $(this).attr("href") === selector;
+  }.parent());
+  $(elem).addClass(activeClass);
+};
+```
+
+With that change, suddenly we can rewrite the two branches of our code to look very similar indeed:
+
+```js
+if(active) {
+  activateTab(active);
+  activateLink(active);
+}
+tabLinks.click(function() {
+  activateTab($(this).attr("href"));
+  activateLink($(this).attr("href"));
+  return false;
+});
+```
+
+Now we've achieved the goal, by performing some intermediate refactorings we now are in a position to deal with the duplication we have in the two branches.
