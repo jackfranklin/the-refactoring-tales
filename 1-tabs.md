@@ -488,4 +488,75 @@ tabLinks.click(function() {
 });
 ```
 
-Now we've achieved the goal, by performing some intermediate refactorings we now are in a position to deal with the duplication we have in the two branches.
+Now we've achieved what we wanted; by performing some intermediate refactorings we now are in a position to deal with the duplication we have in the two branches.
+
+## One method to rule them all
+
+We're going to extract a new method, called `transition`, which will take the selector of the active tab in as its argument, and perform the tasks required. The `transition` method is very simple, it just hands off to `activateTab` and `activateLink`:
+
+```js
+var transition = function(selector) {
+  activateTab(selector);
+  activateLink(selector);
+};
+```
+
+And now we can use that method in our code. In reality I did make this change in two steps, inserting one usage at a time, but I think you get the picture, so I'll show it here as one change. Our new code looks like so:
+
+```js
+var tabsWrapper = $(".tabs");
+var tabs = tabsWrapper.children("div");
+var tabLinks = tabsWrapper.find(".tab-link");
+var activeClass = "active";
+
+var activateLink = function(elem) {
+  $("." + activeClass).removeClass(activeClass);
+  $(elem).addClass(activeClass);
+};
+
+var activateTab = function(tabSelector) {
+  tabs.hide();
+  $(tabSelector).show();
+};
+
+var transition = function(selector) {
+  activateTab(selector);
+  activateLink(selector);
+};
+
+var active = location.hash;
+if(active) {
+  transition(active);
+}
+tabLinks.click(function() {
+  transition($(this).attr("href'));
+  return false;
+});
+```
+
+## Reflection
+
+There's certainly more you could do with this code, and it's also far from being the best implementation of tabs around, but I hope you agree with me that the end result is now much nicer than the one we had at the beginning, which is printed below for you to compare.
+
+```js
+var active = location.hash;
+if(active) {
+  $(".tabs").children("div").hide();
+  $(active).show();
+  $(".active").removeClass("active");
+  $(".tab-link").each(function() {
+    if($(this).attr("href") === active) {
+      $(this).parent().addClass("active");
+    }
+  });
+}
+$(".tabs").find(".tab-link").click(function() {
+  $(".tabs").children("div").hide();
+  $($(this).attr("href")).show();
+  $(".active").removeClass("active");
+  $(this).parent().addClass("active");
+  return false;
+});
+```
+
+By removing duplication and making things clearer, we've ended up with a solution that is more readable, self documenting and maintainable. Notice how at first glance the two different sections of the code looked very different, but after some initial refactorings we found them actually to be near identical. This is a common occurence - often a refactor will open up new possibilities and ways of working, which is another reason to keep your refactorings small and your mind open - an improvement might not be immediately obvious at the beginning.
