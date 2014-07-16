@@ -1,4 +1,6 @@
 
+all: epub pdf mobi html
+
 dir:
 	mkdir -p books/html
 
