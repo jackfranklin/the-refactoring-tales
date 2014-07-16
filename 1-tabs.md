@@ -4,7 +4,7 @@ One of the most common things any new jQuery user will try to do is build some b
 
 Here's a JavaScript function called `tabularize` which, as you might expect, is a small function for creating a tabbed interface.
 
-``` {#mycode .javascript .numberLines}
+```{#mycode .javascript }
 var tabularize = function() {
   var active = location.hash;
   if(active) {
@@ -29,7 +29,7 @@ var tabularize = function() {
 
 To help you put this together, here is the HTML that the code is applied to. We won't be looking at the HTML here, just the code, but this will help with picturing how it all works.
 
-```js
+```{#mycode .javascript }
 <div class="tabs">
   <ul>
     <li class="active"><a href="#tab1" class="tab-link">Tab 1</a></li>
@@ -59,7 +59,7 @@ There's a fair bit wrong with the JavaScript above, but it's not neccessarily ba
 ## Reuse of Selectors
 The key to refactoring is to make the smallest steps you possibly can. The first problem I'd like to tackle is the reuse of selectors.
 
-```js
+```{#mycode .javascript }
 var active = location.hash;
 if(active) {
   $(".tabs").children("div").hide();
@@ -90,13 +90,13 @@ So let's make the change. We'll replace them, but do it _one at a time_, and run
 
 Firstly, I'll store a reference to `$(".tabs")`:
 
-```js
+```{#mycode .javascript }
 var tabsWrapper = $(".tabs");
 ```
 
 And then I can replace every occurence of `$(".tabs")` with `tabsWrapper`:
 
-```js
+```{#mycode .javascript }
 var tabsWrapper = $(".tabs");
 var active = location.hash;
 if(active) {
@@ -120,7 +120,7 @@ tabsWrapper.find(".tab-link").click(function() {
 
 Now that's done and everything is passing, I can repeat the step with `$(".tabs").children("div")`:
 
-```js
+```{#mycode .javascript }
 var tabsWrapper = $(".tabs");
 var tabs = tabsWrapper.children("div");
 var active = location.hash;
@@ -145,7 +145,7 @@ tabsWrapper.find(".tab-link").click(function() {
 
 And finally, deal with `$(".tab-link")`:
 
-```js
+```{#mycode .javascript }
 var tabsWrapper = $(".tabs");
 var tabs = tabsWrapper.children("div");
 var tabLinks = tabsWrapper.find(".tab-link");
@@ -180,7 +180,7 @@ There's a bit more duplication going on though. If you look through the code, yo
 
 Let's introduce an `activeClass` variable to deal with this:
 
-```js
+```{#mycode .javascript }
 var tabsWrapper = $(".tabs");
 var tabs = tabsWrapper.children("div");
 var tabLinks = tabsWrapper.find(".tab-link");
@@ -208,7 +208,7 @@ tabLinks.click(function() {
 
 That's a good step to take, but in the midst of doing this you might have spotted some more duplication. Take a look at these two code blocks. They look pretty similar to me:
 
-```js
+```{#mycode .javascript }
 $("." + activeClass).removeClass(activeClass);
 tabLinks.each(function() {
   if($(this).attr("href") === active) {
@@ -217,7 +217,7 @@ tabLinks.each(function() {
 });
 ```
 
-```js
+```{#mycode .javascript }
 $("." + activeClass).removeClass(activeClass);
 $(this).parent().addClass(activeClass);
 ```
@@ -229,7 +229,7 @@ The first is slightly different, because it has to loop over the links to find t
 
 When we have more than one block of code doing the same thing we can abstract them out into a function. Let's do that now:
 
-```js
+```{#mycode .javascript }
 var activateLink = function(elem) {
   $("." + activeClass).removeClass(activeClass);
   $(elem).addClass(activeClass);
@@ -238,7 +238,7 @@ var activateLink = function(elem) {
 
 The `activateLink` function takes an element and adds the active class to it once it's first removed the active class from any other element that might have it. Now we have this function, we can use it in replace of the code we looked at previously. We'll do this change one at a time. Firstly, we can edit the code within the `tabLinks.click` handler:
 
-```js
+```{#mycode .javascript }
 var tabsWrapper = $(".tabs");
 var tabs = tabsWrapper.children("div");
 var tabLinks = tabsWrapper.find(".tab-link");
@@ -269,7 +269,7 @@ tabLinks.click(function() {
 
 Now all we have to do is pass `$(this).parent()`, which is the element we want to gain the active class, into our `activateLink` function, and it does the rest. We can now swap our function in in place of the code in the `if(active) {}` block:
 
-```js
+```{#mycode .javascript }
 var tabsWrapper = $(".tabs");
 var tabs = tabsWrapper.children("div");
 var tabLinks = tabsWrapper.find(".tab-link");
@@ -307,7 +307,7 @@ We are far from done with these tabs, but I want you to notice how, even after j
 
 The code we've been working with has two blocks:
 
-```js
+```{#mycode .javascript }
 if(active) {
   // do tab things
 };
@@ -319,7 +319,7 @@ tabLinks.click(function() {
 
 Although it doesn't look like it at a glance, there's a lot of duplication going on - both those blocks of code perform basically the same task. This can be sometimes hard to spot, as it can be hidden behind code that doesn't immediately look the same.
 
-```js
+```{#mycode .javascript }
 var tabsWrapper = $(".tabs");
 var tabs = tabsWrapper.children("div");
 var tabLinks = tabsWrapper.find(".tab-link");
@@ -357,7 +357,7 @@ The duplication is obscured somewhat because of the need for the `tabLinks.each`
 
 Sticking with our mantra of making small steps, let's first make a function that shows a specific tab. Sticking with the naming conventions, we'll call it `activateTab`:
 
-```js
+```{#mycode .javascript }
 var activateTab = function(tabSelector) {
   tabs.hide();
   $(tabSelector).show();
@@ -366,7 +366,7 @@ var activateTab = function(tabSelector) {
 
 This function takes a selector and shows it, after hiding all of the tabs first. We can now use this in both the `if(active)` block and in the event handler:
 
-```js
+```{#mycode .javascript }
 var tabsWrapper = $(".tabs");
 var tabs = tabsWrapper.children("div");
 var tabLinks = tabsWrapper.find(".tab-link");
@@ -412,7 +412,7 @@ Although this quote talks about new features, what it efffectively says is that 
 
 I realised after some thinking that the bit of code making this change difficult is this bit:
 
-```js
+```{#mycode .javascript }
 tabLinks.each(function() {
   if($(this).attr("href") === active) {
     activateLink($(this).parent());
@@ -422,7 +422,7 @@ tabLinks.each(function() {
 
 The fact that we have to loop over means we can't just abstract out as easily. Instead of the `each`, we can instead use jQuery's `filter` method:
 
-```js
+```{#mycode .javascript }
 var link = tabLinks.filter(function() { 
   return $(this).attr("href") === active;
 }.parent());
@@ -431,7 +431,7 @@ activateLink(link);
 
 We now filter over the tab links, looking for the one that matches the `active` hash, and get at the item that way instead. I can store the result of that to a variable, and then pass `activateLink` that element. Adding that change into our code gives us:
 
-```js
+```{#mycode .javascript }
 var tabsWrapper = $(".tabs");
 var tabs = tabsWrapper.children("div");
 var tabLinks = tabsWrapper.find(".tab-link");
@@ -464,7 +464,7 @@ tabLinks.click(function() {
 
 Now, to see where the next change will come from, we need to examine a bit more closely the `activateLink` and `activateTab` function. Ideally, I'd like to encapsulate these into another function, but to do that we need to see what each function needs as a parameter. `activateTab` just takes a selector and uses that to hide and show what's required, but `activateLink` actually takes in an element. However, if you look closely, you'll note that there is a relationship between the `activateTab` parameter and the `activateLink` parameter. The `activateLink` is the parent of the element whose selector we pass into `activateTab`. So why don't we pass the selector into `activateLink`, and let it find the exact element it needs?
 
-```js
+```{#mycode .javascript }
 var activateLink = function(selector) {
   $("." + activeClass).removeClass(activeClass);
   var elem = tabLinks.filter(function() { 
@@ -476,7 +476,7 @@ var activateLink = function(selector) {
 
 With that change, suddenly we can rewrite the two branches of our code to look very similar indeed:
 
-```js
+```{#mycode .javascript }
 if(active) {
   activateTab(active);
   activateLink(active);
@@ -494,7 +494,7 @@ Now we've achieved what we wanted; by performing some intermediate refactorings 
 
 We're going to extract a new method, called `transition`, which will take the selector of the active tab in as its argument, and perform the tasks required. The `transition` method is very simple, it just hands off to `activateTab` and `activateLink`:
 
-```js
+```{#mycode .javascript }
 var transition = function(selector) {
   activateTab(selector);
   activateLink(selector);
@@ -503,7 +503,7 @@ var transition = function(selector) {
 
 And now we can use that method in our code. In reality I did make this change in two steps, inserting one usage at a time, but I think you get the picture, so I'll show it here as one change. Our new code looks like so:
 
-```js
+```{#mycode .javascript }
 var tabsWrapper = $(".tabs");
 var tabs = tabsWrapper.children("div");
 var tabLinks = tabsWrapper.find(".tab-link");
@@ -538,7 +538,7 @@ tabLinks.click(function() {
 
 There's certainly more you could do with this code, and it's also far from being the best implementation of tabs around, but I hope you agree with me that the end result is now much nicer than the one we had at the beginning, which is printed below for you to compare.
 
-```js
+```{#mycode .javascript }
 var active = location.hash;
 if(active) {
   $(".tabs").children("div").hide();
