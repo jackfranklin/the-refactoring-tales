@@ -4,7 +4,7 @@ One of the most common things any new jQuery user will try to do is build some b
 
 Here's a JavaScript function called `tabularize` which, as you might expect, is a small function for creating a tabbed interface.
 
-```js
+``` {#mycode .javascript .numberLines}
 var tabularize = function() {
   var active = location.hash;
   if(active) {
