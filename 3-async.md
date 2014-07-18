@@ -105,3 +105,96 @@ Stepping through the `validateParamsExist` method, here's what it does:
 3. Check to see if the token and id parameters were passed, and ensure that they are as expected.
 4. Once the checking of tokens and id are complete, check to see if the `errors` array has any items. If it does, use `res.json` to return those errors from the API, and call the callback with `false`, because the validation failed.
 5. Else, if we have no errors, call the callback with `true`, because the validation must have passed.
+
+## Back to the beginning
+
+I showed you the finished version first because it's readable and easy to digest what is going on, everything the first implementation isn't. What we'll do now is look at the pre-refactoring code and then step through the refactorings I made to get to the above code. Brace yourself, because here is the previous version:
+
+```js
+var matchTokenToUser = function(token, userId, errors, done) {
+  // implementation irrelevant
+}
+
+var ensureTokenExists = function(token, errors, done) {
+  // implementation irrelevant
+};
+
+var validateParamsExist = function(params, req, res, cb) {
+  if(!req.query) {
+    res.json({ errors: ['no parameters supplied'] });
+    return cb(false);
+  } else {
+    var errors = [];
+    async.each(params, function(p, callback) {
+      if(!req.query[p]) {
+        errors.push('parameter ' + p + ' is required');
+        callback();
+      } else {
+        if(p === 'token' && req.query.token) {
+          if(params.indexOf('userId') > -1 && req.query.userId) {
+            matchTokenToUser(req.query.token, req.query.userId, errors, callback);
+          } else {
+            ensureTokenExists(req.query.token, errors, callback);
+          }
+        } else {
+          callback();
+        }
+      }
+    }, function(err) {
+      if(errors.length > 0) {
+        res.json({ errors: errors });
+        return cb(false);
+      } else {
+        return cb(true);
+      }
+    });
+  };
+}
+```
+
+Take a moment to read through that and see what's going on. The good news is it can't get any worse than this - things are only going to get better from here!
+
+## Abstracting functions
+
+Before I even begin to look at the main block of code, that starts with the call to `async.each`, I like to immediately abstract out small blocks into functions. This is the kind of change that I might undo at a later point, but I find it really helps as a starting point to just split one large method up into a bunch of smaller functions if possible. The first bit we can do that for is the first part of our function, the `if(!req.query)...` part:
+
+```js
+var noParamsPassed = function(req, res) {
+  if(req.query) {
+    return false;
+  } else {
+    res.json({ errors: ['no parameters supplied'] });
+    return true;
+  }
+};
+
+var validateParamsExist = function(params, req, res, cb) {
+  if(noParamsPassed(req, res)) return cb(false);
+  var errors = [];
+  async.each(params, function(p, callback) {
+    if(!req.query[p]) {
+      errors.push('parameter ' + p + ' is required');
+      callback();
+    } else {
+      if(p === 'token' && req.query.token) {
+        if(params.indexOf('userId') > -1 && req.query.userId) {
+          matchTokenToUser(req.query.token, req.query.userId, errors, callback);
+        } else {
+          ensureTokenExists(req.query.token, errors, callback);
+        }
+      } else {
+        callback();
+      }
+    }
+  }, function(err) {
+    if(errors.length > 0) {
+      res.json({ errors: errors });
+      return cb(false);
+    } else {
+      return cb(true);
+    }
+  });
+}
+```
+
+Doing this also means we can get rid of the `if(!req.query)` conditional that wrapped most of the body of the `validateParamsExist` method. I find exiting early is preferable to wrapping functions in large conditionals. These are what we call __guard clauses__.
