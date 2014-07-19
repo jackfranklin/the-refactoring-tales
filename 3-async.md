@@ -1,10 +1,4 @@
 # Tale 3: Async Abominations
-https://github.com/clusterapp/api/commit/a4b2ffee942114dcbd210d93666f64fd563016d7
-
-
-BEFORE: https://github.com/clusterapp/api/blob/3cdbf512aa1d1f5946b87c978505910b106e2503/routes/param_validator.js
-
-AFTER: https://github.com/clusterapp/api/blob/a4b2ffee942114dcbd210d93666f64fd563016d7/routes/param_validator.js
 
 The code for this example comes directly from a project I was working on recently. I was building a NodeJS powered API, and as part of that, needed a way of validating parameters that were passed as query strings in the API request. Every single request needs to be passed a `token` parameter, which is matched to the token of a user in the database, and some requests take a `userId` parameter, along with a token. In the case that both the token and userId are passed in, we validate that the token is the token for that specific user. In the case wehre we just take in a token, we validate that the token is valid, and exists in our database.
 
