@@ -332,3 +332,9 @@ var validateParamsExist = function(params, req, res, cb) {
 ```
 
 Compare that to the code we ended up with after sitting back, carefully going through the method to see exactly what it does and how it should work. The code is cleaner, its intention is obvious, there's less nesting and indentation (a very basic, but often useful metric) and it reads nicer.
+
+Any developer who tells you that they have never looked back over some code they've previously written and cringed is a liar. You're never going to get it right first time, and the purpose of this book isn't to try to make you to produce great code first time, but to spot where improvements can be made. Andy Appleton, a developer I've had the pleasure with working with, put this best when we were talking about this kind of thing one day. He said:
+
+> Defer concrete decisions as late as possible - you'll never again know less about the problem than you do right now and the correct abstraction will become clearer over time.
+
+As time goes on and you become more settled within the context of what you're working on, refactorings, abstractions of classes and small tweaks should become easier to spot over time.
