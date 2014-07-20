@@ -4,7 +4,7 @@ The code for this example comes directly from a project I was working on recentl
 
 The API has many routes, so I wanted to abstract this into a function, which I called `validateParamsExist`. It is used like so:
 
-```js
+```javascript
 validateParamsExist(['userId', 'token', 'foo'], req, res, function(requestIsValid) {
   if(requestIsValid) {
     // all parameters were passed
@@ -22,7 +22,7 @@ The function takes four arguments:
 
 It's also important to note that the ExpressJS request object (in the code, I refer to it as `req`), stores the parameters that we got with the URL in an object, which is stored in `req.query`. So if I made a request that looked like this: `http://somesite.com/foo?name=jack&id=123`, `req.query` would look like so:
 
-```js
+```javascript
 req.query = {
   name: 'jack',
   id: '123'
@@ -39,7 +39,7 @@ The challenge here and why this refactor offers a different challenge to the oth
 Rather than show you the starting code, which is badly written and tough to understand, I'm going to show you the finished code first. This is what my refactoring lead me to:
 
 
-```js
+```javascript
 var matchTokenToUser = function(token, userId, errors, done) {
   // method for making sure a token matches a user
 }
@@ -104,7 +104,7 @@ Stepping through the `validateParamsExist` method, here's what it does:
 
 I showed you the finished version first because it's readable and easy to digest what is going on, everything the first implementation isn't. What we'll do now is look at the pre-refactoring code and then step through the refactorings I made to get to the above code. Brace yourself, because here is the previous version:
 
-```js
+```javascript
 var matchTokenToUser = function(token, userId, errors, done) {
   // implementation irrelevant
 }
@@ -152,7 +152,7 @@ Take a moment to read through that and see what's going on. The good news is it 
 
 Before I even begin to look at the main block of code, that starts with the call to `async.each`, I like to immediately abstract out small blocks into functions. This is the kind of change that I might undo at a later point, but I find it really helps as a starting point to just split one large method up into a bunch of smaller functions if possible. The first bit we can do that for is the first part of our function, the `if(!req.query)...` part:
 
-```js
+```javascript
 var noParamsPassed = function(req, res) {
   if(req.query) {
     return false;
@@ -195,7 +195,7 @@ Doing this also means we can get rid of the `if(!req.query)` conditional that wr
 
 The next abstraction is to pull out the code that checks for the existance of `token` and/or `userId` parameters.
 
-```js
+```javascript
 var checkTokenAndIds = function(p, req, errors, callback) {
   if(p === 'token' && req.query.token) {
     if(params.indexOf('userId') > -1 && req.query.userId) {
@@ -243,7 +243,7 @@ It turns out that the only part of this code which does need to run in a loop is
 
 Making the first step of changes leaves us with code that looks like this:
 
-```js
+```javascript
 var validateParamsExist = function(params, req, res, cb) {
   if(noParamsPassed(req, res)) return cb(false);
   var errors = [];
@@ -258,7 +258,7 @@ var validateParamsExist = function(params, req, res, cb) {
 
 The signature of the `checkTokenAndIds` function needs to change somewhat now. Previously we passed in the current parameter, but now we just need to give it all the parameters, our array of errors, and a function to call when it's finished its checks. Here's the final version of the `checkTokenAndIds` method I came up with:
 
-```js
+```javascript
 var checkTokenAndIds = function(req, errors, cb) {
   var token = req.query.token;
   var userId = req.query.userId;
@@ -276,7 +276,7 @@ var checkTokenAndIds = function(req, errors, cb) {
 
 Don't worry about the implementation of `matchTokenToUser` or `ensureTokenExists` - they are both simple methods that just run some database queries, but they have no effect on this chapter. Notice how this method tells a story very effectively, and it's easy to go down it line by line and see what's happening, and follow the story. We can now go and add this method back into `validateParamsExist`:
 
-```js
+```javascript
 var validateParamsExist = function(params, req, res, cb) {
   if(noParamsPassed(req, res)) return cb(false);
   var errors = [];
@@ -297,7 +297,7 @@ var validateParamsExist = function(params, req, res, cb) {
 
 And we're done! This example was slightly different to previous examples - whilst the previous two chapters had code that was pefectly OK but had potential for some improvement, this code was just plain misleading, poorly constructed and badly written. Imagine if you had to make a change to the validation logic, and you had this block of code as your starting point. Do you think you could do it easily? I'm pretty sure I couldn't.
 
-```js
+```javascript
 var validateParamsExist = function(params, req, res, cb) {
   if(!req.query) {
     res.json({ errors: ['no parameters supplied'] });

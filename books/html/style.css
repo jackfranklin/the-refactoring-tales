@@ -1,0 +1,46 @@
+body {
+  width: 80%;
+  margin: 0 auto;
+  font-family: "Helvetica Neue", Helvetica, "Hiragino Sans GB", Arial, sans-serif;
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+#header {
+  border-bottom: 1px solid #111;
+  padding: 10px;
+}
+
+body > h1 {
+  font-size: 25px;
+  background: #ddd;
+  padding: 5px;
+}
+
+blockquote p {
+  font-size: 20px;
+  font-style: italic;
+  line-height: 28px;
+}
+
+pre {
+  font-size: 12px;
+  display: block;
+  padding: 14px;
+  line-height: 16px;
+  border: 1px solid #d9d9d9;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+code {
+  background-color: #fee9cc;
+  color: #111;
+  padding: 1px 3px;
+  font-size: 14px;
+}
+
+pre code {
+  background: #fff;
+  padding: 0;
+}

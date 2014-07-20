@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <meta name="author" content="Jack Franklin">
+  <title>The Refactoring Tales</title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <!--[if lt IE 9]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+  </style>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+<h1 class="title">The Refactoring Tales</h1>
+<h2 class="author">Jack Franklin</h2>
+</header>
+<nav id="TOC">
+<ul>
+<li><a href="#introduction">Introduction</a><ul>
+<li><a href="#refactoring">Refactoring</a></li>
+<li><a href="#tests"> Tests</a></li>
+</ul></li>
+<li><a href="#tale-1-terrible-tabs">Tale 1: Terrible Tabs</a><ul>
+<li><a href="#reuse-of-selectors">Reuse of Selectors</a></li>
+<li><a href="#more-duplication">More Duplication</a></li>
+<li><a href="#step-back">Step Back</a></li>
+<li><a href="#higher-level-duplication">Higher level duplication</a></li>
+<li><a href="#merging-the-branches">Merging the branches</a></li>
+<li><a href="#one-method-to-rule-them-all">One method to rule them all</a></li>
+<li><a href="#reflection">Reflection</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="introduction">Introduction</h1>
+<p>Welcome to The Refactoring Tales, a book that documents some of the refactorings and changes I’ve made in recent (and mostly real-life) projects. This book isn’t going to teach you about language constructs, conditionals, functions, or so on, but hopefully offer insight into how to take steps to make your code more readable and more importantly, maintainable.</p>
+<p>Think of how much time you spend maintaining code, rather than being able to write code from scratch. Day to day, I’m not typically creating new projects, but I am maintaining, editing or refactoring existing projects. This book is just like that. Each chapter will start by looking at some existing code, and over the course of a few pages we will examine, disect and then refactor the code into an improved alternative. Of course, the idea of code being “better” is largely subjective, but even if you don’t quite agree with every step I take, you should be able to see the overall benefits.</p>
+<p>The GitHub repository for this book is here: https://github.com/jackfranklin/the-refactoring-tales, both the raw book files and the code samples are all there for you to take. If you spot any issues as you read this book, a new issue (or even better, a pull request!) is greatly appreciated.</p>
+<h2 id="refactoring">Refactoring</h2>
+<p>Before we continue I think it’s important to define just what exactly I mean when I say “refactoring”. Refactoring has lots of definitions, but I think my favourite and the one I stick to is that of Martin Fowler, in his <a href="http://martinfowler.com/books/refactoring.html">book on refactoring</a></p>
+<blockquote>
+<p>Refactoring is a controlled technique for improving the design of an existing code base. Its essence is applying a series of small behavior-preserving transformations, each of which “too small to be worth doing”.</p>
+</blockquote>
+<p>We apply small changes to the code, and do so several times, until we’re left with a section of code whose design is greatly improved. Notice how they are <em>behaviour-preserving</em> transformations: a refactor should never change behaviour, merely improve the code. The idea of “better” code may be subjective, but to me when I think of good qualities for code to have, I think of it being:</p>
+<ul>
+<li>self documenting: methods and variables are well named and follow a consistent naming pattern</li>
+<li>DRY: there is no duplication or knowledge sharing; every piece of information that could change is declared only once</li>
+<li>clear in its intention; it should read somewhat like a story, and at a quick skim the overall function of that block of code should be apparent</li>
+</ul>
+<p>In his book <a href="http://www.wrox.com/WileyCDA/WroxTitle/productCd-0764579088.html">Professional JavaScript for Web Developers</a>, Nicholas Zakas has a brilliant definition of maintainability which cites the following characteristics: Understandable, intuitive, adaptable, extendable and debuggable. It’s these traits that I hope this book will help you adhere to and aim for.</p>
+<h2 id="tests"> Tests</h2>
+<p>When refactoring, you need to have confidence in the fact that you’ve not broken anything. Similarly, if you do break something, you need to know immediately. This is where the benefit of having tests plays a key role. The ability to run a set of tests and get immediate feedback is fantastic, and that’s precisely what tests give you. It’s very easy these days to get started with tests, whether you’re writing Ruby, or JavaScript on the server with NodeJS, or in the browser, there are a myriad of tools available to you. This isn’t a book on testing, and I could write in huge depth on the subject, so for each example in this book, you should assume that I have tested it as I’ve gone (in actual fact for every example there is, I did have tests everytime). If you want to refactor but don’t have tests, write tests. Do not ever attempt to refactor without writing any tests. Ever.</p>
+<p>You should also make sure you can run your tests easily. I have mine hooked up through my editor, Vim, so I can hit a 3 key shortcut and have my tests run. Configure it however you want, and make sure it’s easy to do.</p>
+<h1 id="tale-1-terrible-tabs">Tale 1: Terrible Tabs</h1>
+<p>One of the most common things any new jQuery user will try to do is build some basic HTML tabs. It’s like the initiation into the jQuery world (not quite, that’s carousels, which are next up) and it serves as a good starting point to show you the first refactoring.</p>
+<p>Here’s a JavaScript function called <code>tabularize</code> which, as you might expect, is a small function for creating a tabbed interface.</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> tabularize = <span class="kw">function</span>() {
+  <span class="kw">var</span> active = <span class="ot">location</span>.<span class="fu">hash</span>;
+  <span class="kw">if</span>(active) {
+    <span class="fu">$</span>(<span class="st">&quot;.tabs&quot;</span>).<span class="fu">children</span>(<span class="st">&quot;div&quot;</span>).<span class="fu">hide</span>();
+    <span class="fu">$</span>(active).<span class="fu">show</span>();
+    <span class="fu">$</span>(<span class="st">&quot;.active&quot;</span>).<span class="fu">removeClass</span>(<span class="st">&quot;active&quot;</span>);
+    <span class="fu">$</span>(<span class="st">&quot;.tab-link&quot;</span>).<span class="fu">each</span>(<span class="kw">function</span>() {
+      <span class="kw">if</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>) === active) {
+        <span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>().<span class="fu">addClass</span>(<span class="st">&quot;active&quot;</span>);
+      }
+    });
+  }
+  <span class="fu">$</span>(<span class="st">&quot;.tabs&quot;</span>).<span class="fu">find</span>(<span class="st">&quot;.tab-link&quot;</span>).<span class="fu">click</span>(<span class="kw">function</span>() {
+    <span class="fu">$</span>(<span class="st">&quot;.tabs&quot;</span>).<span class="fu">children</span>(<span class="st">&quot;div&quot;</span>).<span class="fu">hide</span>();
+    <span class="fu">$</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>)).<span class="fu">show</span>();
+    <span class="fu">$</span>(<span class="st">&quot;.active&quot;</span>).<span class="fu">removeClass</span>(<span class="st">&quot;active&quot;</span>);
+    <span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>().<span class="fu">addClass</span>(<span class="st">&quot;active&quot;</span>);
+    <span class="kw">return</span> <span class="kw">false</span>;
+  });
+};</code></pre>
+<p>To help you put this together, here is the HTML that the code is applied to. We won’t be looking at the HTML here, just the code, but this will help with picturing how it all works.</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript">&lt;div <span class="kw">class</span>=<span class="st">&quot;tabs&quot;</span>&gt;
+  &lt;ul&gt;
+    &lt;li <span class="kw">class</span>=<span class="st">&quot;active&quot;</span>&gt;&lt;a href=<span class="st">&quot;#tab1&quot;</span> <span class="kw">class</span>=<span class="st">&quot;tab-link&quot;</span>&gt;Tab <span class="dv">1</span>&lt;<span class="ot">/a&gt;&lt;/li</span>&gt;
+    &lt;li&gt;&lt;a href=<span class="st">&quot;#tab2&quot;</span> <span class="kw">class</span>=<span class="st">&quot;tab-link&quot;</span>&gt;Tab <span class="dv">2</span>&lt;<span class="ot">/a&gt;&lt;/li</span>&gt;
+    &lt;li&gt;&lt;a href=<span class="st">&quot;#tab3&quot;</span> <span class="kw">class</span>=<span class="st">&quot;tab-link&quot;</span>&gt;Tab <span class="dv">3</span>&lt;<span class="ot">/a&gt;&lt;/li</span>&gt;
+  &lt;<span class="ot">/ul&gt;</span>
+<span class="ot">  &lt;div id=&quot;tab1&quot;&gt;</span>
+<span class="ot">    &lt;h3&gt;Tab 1&lt;/h3</span>&gt;
+    &lt;p&gt;Lorem ipsum dolor sit amet&lt;<span class="ot">/p&gt;</span>
+<span class="ot">  &lt;/div</span>&gt;
+  &lt;div id=<span class="st">&quot;tab2&quot;</span>&gt;
+    &lt;h3&gt;Tab <span class="dv">2</span>&lt;<span class="ot">/h3&gt;</span>
+<span class="ot">    &lt;p&gt;Lorem ipsum dolor sit amet&lt;/p</span>&gt;
+  &lt;<span class="ot">/div&gt;</span>
+<span class="ot">  &lt;div id=&quot;tab3&quot;&gt;</span>
+<span class="ot">    &lt;h3&gt;Tab 3&lt;/h3</span>&gt;
+    &lt;p&gt;Lorem ipsum dolor sit amet&lt;<span class="ot">/p&gt;</span>
+<span class="ot">  &lt;/div</span>&gt;
+&lt;<span class="ot">/div&gt;</span>
+<span class="ot">&lt;script&gt;</span>
+<span class="ot">  $</span><span class="fl">(</span><span class="ot">tabularize</span><span class="fl">)</span><span class="ot">;</span>
+<span class="ot">&lt;/script</span>&gt;</code></pre>
+<p>There’s a fair bit wrong with the JavaScript above, but it’s not neccessarily bad code. It performs the tasks that are required of it. There are a couple of bugs, but as refactorers, we are not here to change the behaviour of the code. It passes the tests (in the introduction we discussed how every refactoring must be backed by tests) and our aim is to change the design, not the behaviour, and pass all the tests. I won’t show the tests, as they distract from the main purpose, but rest assured I did have them when making the changes I’m about to talk through and I was careful to keep them passing.</p>
+<h2 id="reuse-of-selectors">Reuse of Selectors</h2>
+<p>The key to refactoring is to make the smallest steps you possibly can. The first problem I’d like to tackle is the reuse of selectors.</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> active = <span class="ot">location</span>.<span class="fu">hash</span>;
+<span class="kw">if</span>(active) {
+  <span class="fu">$</span>(<span class="st">&quot;.tabs&quot;</span>).<span class="fu">children</span>(<span class="st">&quot;div&quot;</span>).<span class="fu">hide</span>();
+  <span class="fu">$</span>(active).<span class="fu">show</span>();
+  <span class="fu">$</span>(<span class="st">&quot;.active&quot;</span>).<span class="fu">removeClass</span>(<span class="st">&quot;active&quot;</span>);
+  <span class="fu">$</span>(<span class="st">&quot;.tab-link&quot;</span>).<span class="fu">each</span>(<span class="kw">function</span>() {
+    <span class="kw">if</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>) === active) {
+      <span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>().<span class="fu">addClass</span>(<span class="st">&quot;active&quot;</span>);
+    }
+  });
+}
+<span class="fu">$</span>(<span class="st">&quot;.tabs&quot;</span>).<span class="fu">find</span>(<span class="st">&quot;.tab-link&quot;</span>).<span class="fu">click</span>(<span class="kw">function</span>() {
+  <span class="fu">$</span>(<span class="st">&quot;.tabs&quot;</span>).<span class="fu">children</span>(<span class="st">&quot;div&quot;</span>).<span class="fu">hide</span>();
+  <span class="fu">$</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>)).<span class="fu">show</span>();
+  <span class="fu">$</span>(<span class="st">&quot;.active&quot;</span>).<span class="fu">removeClass</span>(<span class="st">&quot;active&quot;</span>);
+  <span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>().<span class="fu">addClass</span>(<span class="st">&quot;active&quot;</span>);
+  <span class="kw">return</span> <span class="kw">false</span>;
+});</code></pre>
+<p>Looking over the code again, you can see a few selectors that crop up again and again:</p>
+<ul>
+<li><code>$(&quot;.tabs&quot;)</code></li>
+<li><code>$(&quot;.tabs&quot;).children(&quot;div&quot;)</code></li>
+<li><code>$(&quot;.tab-link&quot;)</code></li>
+</ul>
+<p>So let’s make the change. We’ll replace them, but do it <em>one at a time</em>, and run the tests <em>after every change</em>. This might seem excessive, but it really is key to this process.</p>
+<p>Firstly, I’ll store a reference to <code>$(&quot;.tabs&quot;)</code>:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> tabsWrapper = <span class="fu">$</span>(<span class="st">&quot;.tabs&quot;</span>);</code></pre>
+<p>And then I can replace every occurence of <code>$(&quot;.tabs&quot;)</code> with <code>tabsWrapper</code>:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> tabsWrapper = <span class="fu">$</span>(<span class="st">&quot;.tabs&quot;</span>);
+<span class="kw">var</span> active = <span class="ot">location</span>.<span class="fu">hash</span>;
+<span class="kw">if</span>(active) {
+  <span class="ot">tabsWrapper</span>.<span class="fu">children</span>(<span class="st">&quot;div&quot;</span>).<span class="fu">hide</span>();
+  <span class="fu">$</span>(active).<span class="fu">show</span>();
+  <span class="fu">$</span>(<span class="st">&quot;.active&quot;</span>).<span class="fu">removeClass</span>(<span class="st">&quot;active&quot;</span>);
+  <span class="fu">$</span>(<span class="st">&quot;.tab-link&quot;</span>).<span class="fu">each</span>(<span class="kw">function</span>() {
+    <span class="kw">if</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>) === active) {
+      <span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>().<span class="fu">addClass</span>(<span class="st">&quot;active&quot;</span>);
+    }
+  });
+}
+<span class="ot">tabsWrapper</span>.<span class="fu">find</span>(<span class="st">&quot;.tab-link&quot;</span>).<span class="fu">click</span>(<span class="kw">function</span>() {
+  <span class="ot">tabsWrapper</span>.<span class="fu">children</span>(<span class="st">&quot;div&quot;</span>).<span class="fu">hide</span>();
+  <span class="fu">$</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>)).<span class="fu">show</span>();
+  <span class="fu">$</span>(<span class="st">&quot;.active&quot;</span>).<span class="fu">removeClass</span>(<span class="st">&quot;active&quot;</span>);
+  <span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>().<span class="fu">addClass</span>(<span class="st">&quot;active&quot;</span>);
+  <span class="kw">return</span> <span class="kw">false</span>;
+});</code></pre>
+<p>Now that’s done and everything is passing, I can repeat the step with <code>$(&quot;.tabs&quot;).children(&quot;div&quot;)</code>:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> tabsWrapper = <span class="fu">$</span>(<span class="st">&quot;.tabs&quot;</span>);
+<span class="kw">var</span> tabs = <span class="ot">tabsWrapper</span>.<span class="fu">children</span>(<span class="st">&quot;div&quot;</span>);
+<span class="kw">var</span> active = <span class="ot">location</span>.<span class="fu">hash</span>;
+<span class="kw">if</span>(active) {
+  <span class="ot">tabs</span>.<span class="fu">hide</span>();
+  <span class="fu">$</span>(active).<span class="fu">show</span>();
+  <span class="fu">$</span>(<span class="st">&quot;.active&quot;</span>).<span class="fu">removeClass</span>(<span class="st">&quot;active&quot;</span>);
+  <span class="fu">$</span>(<span class="st">&quot;.tab-link&quot;</span>).<span class="fu">each</span>(<span class="kw">function</span>() {
+    <span class="kw">if</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>) === active) {
+      <span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>().<span class="fu">addClass</span>(<span class="st">&quot;active&quot;</span>);
+    }
+  });
+}
+<span class="ot">tabsWrapper</span>.<span class="fu">find</span>(<span class="st">&quot;.tab-link&quot;</span>).<span class="fu">click</span>(<span class="kw">function</span>() {
+  <span class="ot">tabs</span>.<span class="fu">hide</span>();
+  <span class="fu">$</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>)).<span class="fu">show</span>();
+  <span class="fu">$</span>(<span class="st">&quot;.active&quot;</span>).<span class="fu">removeClass</span>(<span class="st">&quot;active&quot;</span>);
+  <span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>().<span class="fu">addClass</span>(<span class="st">&quot;active&quot;</span>);
+  <span class="kw">return</span> <span class="kw">false</span>;
+});</code></pre>
+<p>And finally, deal with <code>$(&quot;.tab-link&quot;)</code>:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> tabsWrapper = <span class="fu">$</span>(<span class="st">&quot;.tabs&quot;</span>);
+<span class="kw">var</span> tabs = <span class="ot">tabsWrapper</span>.<span class="fu">children</span>(<span class="st">&quot;div&quot;</span>);
+<span class="kw">var</span> tabLinks = <span class="ot">tabsWrapper</span>.<span class="fu">find</span>(<span class="st">&quot;.tab-link&quot;</span>);
+<span class="kw">var</span> active = <span class="ot">location</span>.<span class="fu">hash</span>;
+<span class="kw">if</span>(active) {
+  <span class="ot">tabs</span>.<span class="fu">hide</span>();
+  <span class="fu">$</span>(active).<span class="fu">show</span>();
+  <span class="fu">$</span>(<span class="st">&quot;.active&quot;</span>).<span class="fu">removeClass</span>(<span class="st">&quot;active&quot;</span>);
+  <span class="ot">tabLinks</span>.<span class="fu">each</span>(<span class="kw">function</span>() {
+    <span class="kw">if</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>) === active) {
+      <span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>().<span class="fu">addClass</span>(<span class="st">&quot;active&quot;</span>);
+    }
+  });
+}
+<span class="ot">tabLinks</span>.<span class="fu">click</span>(<span class="kw">function</span>() {
+  <span class="ot">tabs</span>.<span class="fu">hide</span>();
+  <span class="fu">$</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>)).<span class="fu">show</span>();
+  <span class="fu">$</span>(<span class="st">&quot;.active&quot;</span>).<span class="fu">removeClass</span>(<span class="st">&quot;active&quot;</span>);
+  <span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>().<span class="fu">addClass</span>(<span class="st">&quot;active&quot;</span>);
+  <span class="kw">return</span> <span class="kw">false</span>;
+});</code></pre>
+<p>And now, even with just that small change in place, our code is improved. We have removed duplication, which in my opinion has given us two big improvements.</p>
+<ol type="1">
+<li>If any of the selectors change, or our HTML changes, we only have to change those selectors in one place, not multiple.</li>
+<li>The code is clearer now. If you need to skim and quickly gain an understanding of what the code does, having well named variables in place of complex selectors helps massively.</li>
+</ol>
+<h2 id="more-duplication">More Duplication</h2>
+<p>There’s a bit more duplication going on though. If you look through the code, you’ll see the string <code>&quot;active&quot;</code> present far too many times. What if the class we gave the active tab had to change? Right now, we’re looking at <strong>five</strong> occurences of it. Wouldn’t it be better if that was just one?</p>
+<p>Let’s introduce an <code>activeClass</code> variable to deal with this:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> tabsWrapper = <span class="fu">$</span>(<span class="st">&quot;.tabs&quot;</span>);
+<span class="kw">var</span> tabs = <span class="ot">tabsWrapper</span>.<span class="fu">children</span>(<span class="st">&quot;div&quot;</span>);
+<span class="kw">var</span> tabLinks = <span class="ot">tabsWrapper</span>.<span class="fu">find</span>(<span class="st">&quot;.tab-link&quot;</span>);
+<span class="kw">var</span> activeClass = <span class="st">&quot;active&quot;</span>;
+
+<span class="kw">var</span> active = <span class="ot">location</span>.<span class="fu">hash</span>;
+<span class="kw">if</span>(active) {
+  <span class="ot">tabs</span>.<span class="fu">hide</span>();
+  <span class="fu">$</span>(active).<span class="fu">show</span>();
+  <span class="fu">$</span>(<span class="st">&quot;.&quot;</span> + activeClass).<span class="fu">removeClass</span>(activeClass);
+  <span class="ot">tabLinks</span>.<span class="fu">each</span>(<span class="kw">function</span>() {
+    <span class="kw">if</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>) === active) {
+      <span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>().<span class="fu">addClass</span>(activeClass);
+    }
+  });
+}
+<span class="ot">tabLinks</span>.<span class="fu">click</span>(<span class="kw">function</span>() {
+  <span class="ot">tabs</span>.<span class="fu">hide</span>();
+  <span class="fu">$</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>)).<span class="fu">show</span>();
+  <span class="fu">$</span>(<span class="st">&quot;.&quot;</span> + activeClass).<span class="fu">removeClass</span>(activeClass);
+  <span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>().<span class="fu">addClass</span>(activeClass);
+  <span class="kw">return</span> <span class="kw">false</span>;
+});</code></pre>
+<p>That’s a good step to take, but in the midst of doing this you might have spotted some more duplication. Take a look at these two code blocks. They look pretty similar to me:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="fu">$</span>(<span class="st">&quot;.&quot;</span> + activeClass).<span class="fu">removeClass</span>(activeClass);
+<span class="ot">tabLinks</span>.<span class="fu">each</span>(<span class="kw">function</span>() {
+  <span class="kw">if</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>) === active) {
+    <span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>().<span class="fu">addClass</span>(activeClass);
+  }
+});</code></pre>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="fu">$</span>(<span class="st">&quot;.&quot;</span> + activeClass).<span class="fu">removeClass</span>(activeClass);
+<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>().<span class="fu">addClass</span>(activeClass);</code></pre>
+<p>The first is slightly different, because it has to loop over the links to find the right element to work with, but both of these blocks are performing the same piece of work:</p>
+<ol type="1">
+<li>Find the current element with the active class, and remove the active class.</li>
+<li>Take this new element’s parent, and add the active class.</li>
+</ol>
+<p>When we have more than one block of code doing the same thing we can abstract them out into a function. Let’s do that now:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> activateLink = <span class="kw">function</span>(elem) {
+  <span class="fu">$</span>(<span class="st">&quot;.&quot;</span> + activeClass).<span class="fu">removeClass</span>(activeClass);
+  <span class="fu">$</span>(elem).<span class="fu">addClass</span>(activeClass);
+};</code></pre>
+<p>The <code>activateLink</code> function takes an element and adds the active class to it once it’s first removed the active class from any other element that might have it. Now we have this function, we can use it in replace of the code we looked at previously. We’ll do this change one at a time. Firstly, we can edit the code within the <code>tabLinks.click</code> handler:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> tabsWrapper = <span class="fu">$</span>(<span class="st">&quot;.tabs&quot;</span>);
+<span class="kw">var</span> tabs = <span class="ot">tabsWrapper</span>.<span class="fu">children</span>(<span class="st">&quot;div&quot;</span>);
+<span class="kw">var</span> tabLinks = <span class="ot">tabsWrapper</span>.<span class="fu">find</span>(<span class="st">&quot;.tab-link&quot;</span>);
+<span class="kw">var</span> activeClass = <span class="st">&quot;active&quot;</span>;
+<span class="kw">var</span> activateLink = <span class="kw">function</span>(elem) {
+  <span class="fu">$</span>(<span class="st">&quot;.&quot;</span> + activeClass).<span class="fu">removeClass</span>(activeClass);
+  <span class="fu">$</span>(elem).<span class="fu">addClass</span>(activeClass);
+};
+
+<span class="kw">var</span> active = <span class="ot">location</span>.<span class="fu">hash</span>;
+<span class="kw">if</span>(active) {
+  <span class="ot">tabs</span>.<span class="fu">hide</span>();
+  <span class="fu">$</span>(active).<span class="fu">show</span>();
+  <span class="fu">$</span>(<span class="st">&quot;.&quot;</span> + activeClass).<span class="fu">removeClass</span>(activeClass);
+  <span class="ot">tabLinks</span>.<span class="fu">each</span>(<span class="kw">function</span>() {
+    <span class="kw">if</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>) === active) {
+      <span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>().<span class="fu">addClass</span>(activeClass);
+    }
+  });
+}
+<span class="ot">tabLinks</span>.<span class="fu">click</span>(<span class="kw">function</span>() {
+  <span class="ot">tabs</span>.<span class="fu">hide</span>();
+  <span class="fu">$</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>)).<span class="fu">show</span>();
+  <span class="fu">activateLink</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>());
+  <span class="kw">return</span> <span class="kw">false</span>;
+});</code></pre>
+<p>Now all we have to do is pass <code>$(this).parent()</code>, which is the element we want to gain the active class, into our <code>activateLink</code> function, and it does the rest. We can now swap our function in in place of the code in the <code>if(active) {}</code> block:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> tabsWrapper = <span class="fu">$</span>(<span class="st">&quot;.tabs&quot;</span>);
+<span class="kw">var</span> tabs = <span class="ot">tabsWrapper</span>.<span class="fu">children</span>(<span class="st">&quot;div&quot;</span>);
+<span class="kw">var</span> tabLinks = <span class="ot">tabsWrapper</span>.<span class="fu">find</span>(<span class="st">&quot;.tab-link&quot;</span>);
+<span class="kw">var</span> activeClass = <span class="st">&quot;active&quot;</span>;
+<span class="kw">var</span> activateLink = <span class="kw">function</span>(elem) {
+  <span class="fu">$</span>(<span class="st">&quot;.&quot;</span> + activeClass).<span class="fu">removeClass</span>(activeClass);
+  <span class="fu">$</span>(elem).<span class="fu">addClass</span>(activeClass);
+};
+
+<span class="kw">var</span> active = <span class="ot">location</span>.<span class="fu">hash</span>;
+<span class="kw">if</span>(active) {
+  <span class="ot">tabs</span>.<span class="fu">hide</span>();
+  <span class="fu">$</span>(active).<span class="fu">show</span>();
+  <span class="ot">tabLinks</span>.<span class="fu">each</span>(<span class="kw">function</span>() {
+    <span class="kw">if</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>) === active) {
+      <span class="fu">activateLink</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>());
+    }
+  });
+}
+<span class="ot">tabLinks</span>.<span class="fu">click</span>(<span class="kw">function</span>() {
+  <span class="ot">tabs</span>.<span class="fu">hide</span>();
+  <span class="fu">$</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>)).<span class="fu">show</span>();
+  <span class="fu">activateLink</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>());
+  <span class="kw">return</span> <span class="kw">false</span>;
+});</code></pre>
+<p>Abstracting code out into functions is one of the easiest and most effective ways to make a block of code more maintainable. Functions are inherently self documenting, a well named function can tell you in one quick skim exactly what its function is, and what it does. As a new developer coming to the above block of code, I can understand the <code>activateLink</code> function’s effect <em>without looking at the code within it</em>. Being able to skim a block of code and gain an understanding without having to look at detailed implementation is a fantastic thing as a developer.</p>
+<h2 id="step-back">Step Back</h2>
+<p>We are far from done with these tabs, but I want you to notice how, even after just a couple of small changes, the code is now already in an improved position than when we picked it up. We have removed duplication of selectors and code, and made the code more self documenting and readable along the way. When refactoring, you should be in a position to stop the refactoring at any point, and move onto something else. If this was a real project, and suddenly I was called to an urgent bug in another project, I could commit this code now and still have improved it. You should never find yourself in such a mess that you can’t put the code down and come back later. This is vital to successful refactorings: keep them small and contained.</p>
+<h2 id="higher-level-duplication">Higher level duplication</h2>
+<p>The code we’ve been working with has two blocks:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">if</span>(active) {
+  <span class="co">// do tab things</span>
+};
+
+<span class="ot">tabLinks</span>.<span class="fu">click</span>(<span class="kw">function</span>() {
+  <span class="co">// do tab things</span>
+};</code></pre>
+<p>Although it doesn’t look like it at a glance, there’s a lot of duplication going on - both those blocks of code perform basically the same task. This can be sometimes hard to spot, as it can be hidden behind code that doesn’t immediately look the same.</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> tabsWrapper = <span class="fu">$</span>(<span class="st">&quot;.tabs&quot;</span>);
+<span class="kw">var</span> tabs = <span class="ot">tabsWrapper</span>.<span class="fu">children</span>(<span class="st">&quot;div&quot;</span>);
+<span class="kw">var</span> tabLinks = <span class="ot">tabsWrapper</span>.<span class="fu">find</span>(<span class="st">&quot;.tab-link&quot;</span>);
+<span class="kw">var</span> activeClass = <span class="st">&quot;active&quot;</span>;
+<span class="kw">var</span> activateLink = <span class="kw">function</span>(elem) {
+  <span class="fu">$</span>(<span class="st">&quot;.&quot;</span> + activeClass).<span class="fu">removeClass</span>(activeClass);
+  <span class="fu">$</span>(elem).<span class="fu">addClass</span>(activeClass);
+};
+
+<span class="kw">var</span> active = <span class="ot">location</span>.<span class="fu">hash</span>;
+<span class="kw">if</span>(active) {
+  <span class="ot">tabs</span>.<span class="fu">hide</span>();
+  <span class="fu">$</span>(active).<span class="fu">show</span>();
+  <span class="ot">tabLinks</span>.<span class="fu">each</span>(<span class="kw">function</span>() {
+    <span class="kw">if</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>) === active) {
+      <span class="fu">activateLink</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>());
+    }
+  });
+}
+<span class="ot">tabLinks</span>.<span class="fu">click</span>(<span class="kw">function</span>() {
+  <span class="ot">tabs</span>.<span class="fu">hide</span>();
+  <span class="fu">$</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>)).<span class="fu">show</span>();
+  <span class="fu">activateLink</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>());
+  <span class="kw">return</span> <span class="kw">false</span>;
+});</code></pre>
+<p>Now I’ve given you the primer, take another look over the code above. Notice how both blocks do the same thing:</p>
+<ul>
+<li>hide all the tabs</li>
+<li>find and show a specific tab</li>
+<li>update the link for that tab with a new class</li>
+</ul>
+<p>The duplication is obscured somewhat because of the need for the <code>tabLinks.each</code> in the first block, but this doesn’t mean that we can’t abstract that duplication into a function.</p>
+<p>Sticking with our mantra of making small steps, let’s first make a function that shows a specific tab. Sticking with the naming conventions, we’ll call it <code>activateTab</code>:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> activateTab = <span class="kw">function</span>(tabSelector) {
+  <span class="ot">tabs</span>.<span class="fu">hide</span>();
+  <span class="fu">$</span>(tabSelector).<span class="fu">show</span>();
+};</code></pre>
+<p>This function takes a selector and shows it, after hiding all of the tabs first. We can now use this in both the <code>if(active)</code> block and in the event handler:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> tabsWrapper = <span class="fu">$</span>(<span class="st">&quot;.tabs&quot;</span>);
+<span class="kw">var</span> tabs = <span class="ot">tabsWrapper</span>.<span class="fu">children</span>(<span class="st">&quot;div&quot;</span>);
+<span class="kw">var</span> tabLinks = <span class="ot">tabsWrapper</span>.<span class="fu">find</span>(<span class="st">&quot;.tab-link&quot;</span>);
+<span class="kw">var</span> activeClass = <span class="st">&quot;active&quot;</span>;
+
+<span class="kw">var</span> activateLink = <span class="kw">function</span>(elem) {
+  <span class="fu">$</span>(<span class="st">&quot;.&quot;</span> + activeClass).<span class="fu">removeClass</span>(activeClass);
+  <span class="fu">$</span>(elem).<span class="fu">addClass</span>(activeClass);
+};
+
+<span class="kw">var</span> activateTab = <span class="kw">function</span>(tabSelector) {
+  <span class="ot">tabs</span>.<span class="fu">hide</span>();
+  <span class="fu">$</span>(tabSelector).<span class="fu">show</span>();
+};
+
+<span class="kw">var</span> active = <span class="ot">location</span>.<span class="fu">hash</span>;
+<span class="kw">if</span>(active) {
+  <span class="fu">activateTab</span>(active);
+  <span class="ot">tabLinks</span>.<span class="fu">each</span>(<span class="kw">function</span>() {
+    <span class="kw">if</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>) === active) {
+      <span class="fu">activateLink</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>());
+    }
+  });
+}
+<span class="ot">tabLinks</span>.<span class="fu">click</span>(<span class="kw">function</span>() {
+  <span class="fu">activateTab</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>));
+  <span class="fu">activateLink</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>());
+  <span class="kw">return</span> <span class="kw">false</span>;
+});</code></pre>
+<p>We’re really motoring now. Notice how the tabLinks event handler simply calls two other functions, and has very little in it. This is a good sign that we’re on the right tracks. <a href="http://codeulate.com/">Ben Orenstein</a>, a developer who speaks a huge amount on refactoring, says that a function with one line inside is superior to a function with two lines, which in turn is superior to a function with three lines, and so on. <a href="http://www.sandimetz.com/">Sandi Metz</a>, a well known Ruby developer, defined a <a href="http://robots.thoughtbot.com/sandi-metz-rules-for-developers">set of rules</a> that help when building large projects, one of which is: “Methods can be no longer than five lines of code.”. Regardless of if you think five is a good or bad number for that rule, the point stands: short, small functions are nearly always preferable to large ones. Keep functions small and compose larger functions out of calling lots of little ones.</p>
+<p>Before we continue, notice again how if we wanted to stop now, we could. It’s so important to not let yourself get down a huge rabbit hole of refactoring.</p>
+<h2 id="merging-the-branches">Merging the branches</h2>
+<p>Right now we have two branches in our code, the <code>if(active)</code> part and the event handler. I’d really like to try and get these into one, or at least make the branches as small as possible. Right now they still have duplication, they noth call <code>activateTab</code> and <code>activateLink</code>. I’d really like to abstract that out into another function, but right now the obvious step isn’t that obvious. Sometimes you’ll reach a point like this when you’re coding, where you know waht you need to do or want to do, but the step isn’t obvious. Often you’ll have to make another change, to make the new change easier. In their book <a href="http://refactoring.com/">Refactoring</a>, Martin Fowler and Kent Beck put this nicely:</p>
+<blockquote>
+<p>When you find you have to add a feature to a program, and the program’s code is not structured in a convenient way to add the feature, first refactor the program to make it easy to add the feature, then add the feature.</p>
+</blockquote>
+<p>Although this quote talks about new features, what it efffectively says is that if you need to make a change, but that change is proving tough to make, make other changes such that your original change is easy.</p>
+<p>I realised after some thinking that the bit of code making this change difficult is this bit:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="ot">tabLinks</span>.<span class="fu">each</span>(<span class="kw">function</span>() {
+  <span class="kw">if</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>) === active) {
+    <span class="fu">activateLink</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>());
+  }
+});</code></pre>
+<p>The fact that we have to loop over means we can’t just abstract out as easily. Instead of the <code>each</code>, we can instead use jQuery’s <code>filter</code> method:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> link = <span class="ot">tabLinks</span>.<span class="fu">filter</span>(<span class="kw">function</span>() { 
+  <span class="kw">return</span> <span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>) === active;
+}.<span class="fu">parent</span>());
+<span class="fu">activateLink</span>(link);</code></pre>
+<p>We now filter over the tab links, looking for the one that matches the <code>active</code> hash, and get at the item that way instead. I can store the result of that to a variable, and then pass <code>activateLink</code> that element. Adding that change into our code gives us:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> tabsWrapper = <span class="fu">$</span>(<span class="st">&quot;.tabs&quot;</span>);
+<span class="kw">var</span> tabs = <span class="ot">tabsWrapper</span>.<span class="fu">children</span>(<span class="st">&quot;div&quot;</span>);
+<span class="kw">var</span> tabLinks = <span class="ot">tabsWrapper</span>.<span class="fu">find</span>(<span class="st">&quot;.tab-link&quot;</span>);
+<span class="kw">var</span> activeClass = <span class="st">&quot;active&quot;</span>;
+
+<span class="kw">var</span> activateLink = <span class="kw">function</span>(elem) {
+  <span class="fu">$</span>(<span class="st">&quot;.&quot;</span> + activeClass).<span class="fu">removeClass</span>(activeClass);
+  <span class="fu">$</span>(elem).<span class="fu">addClass</span>(activeClass);
+};
+
+<span class="kw">var</span> activateTab = <span class="kw">function</span>(tabSelector) {
+  <span class="ot">tabs</span>.<span class="fu">hide</span>();
+  <span class="fu">$</span>(tabSelector).<span class="fu">show</span>();
+};
+
+<span class="kw">var</span> active = <span class="ot">location</span>.<span class="fu">hash</span>;
+<span class="kw">if</span>(active) {
+  <span class="fu">activateTab</span>(active);
+  <span class="kw">var</span> link = <span class="ot">tabLinks</span>.<span class="fu">filter</span>(<span class="kw">function</span>() { 
+    <span class="kw">return</span> <span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>) === active;
+  }.<span class="fu">parent</span>());
+  <span class="fu">activateLink</span>(link);
+}
+<span class="ot">tabLinks</span>.<span class="fu">click</span>(<span class="kw">function</span>() {
+  <span class="fu">activateTab</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>));
+  <span class="fu">activateLink</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>());
+  <span class="kw">return</span> <span class="kw">false</span>;
+});</code></pre>
+<p>Now, to see where the next change will come from, we need to examine a bit more closely the <code>activateLink</code> and <code>activateTab</code> function. Ideally, I’d like to encapsulate these into another function, but to do that we need to see what each function needs as a parameter. <code>activateTab</code> just takes a selector and uses that to hide and show what’s required, but <code>activateLink</code> actually takes in an element. However, if you look closely, you’ll note that there is a relationship between the <code>activateTab</code> parameter and the <code>activateLink</code> parameter. The <code>activateLink</code> is the parent of the element whose selector we pass into <code>activateTab</code>. So why don’t we pass the selector into <code>activateLink</code>, and let it find the exact element it needs?</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> activateLink = <span class="kw">function</span>(selector) {
+  <span class="fu">$</span>(<span class="st">&quot;.&quot;</span> + activeClass).<span class="fu">removeClass</span>(activeClass);
+  <span class="kw">var</span> elem = <span class="ot">tabLinks</span>.<span class="fu">filter</span>(<span class="kw">function</span>() { 
+    <span class="kw">return</span> <span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>) === selector;
+  }.<span class="fu">parent</span>());
+  <span class="fu">$</span>(elem).<span class="fu">addClass</span>(activeClass);
+};</code></pre>
+<p>With that change, suddenly we can rewrite the two branches of our code to look very similar indeed:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">if</span>(active) {
+  <span class="fu">activateTab</span>(active);
+  <span class="fu">activateLink</span>(active);
+}
+<span class="ot">tabLinks</span>.<span class="fu">click</span>(<span class="kw">function</span>() {
+  <span class="fu">activateTab</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>));
+  <span class="fu">activateLink</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>));
+  <span class="kw">return</span> <span class="kw">false</span>;
+});</code></pre>
+<p>Now we’ve achieved what we wanted; by performing some intermediate refactorings we now are in a position to deal with the duplication we have in the two branches.</p>
+<h2 id="one-method-to-rule-them-all">One method to rule them all</h2>
+<p>We’re going to extract a new method, called <code>transition</code>, which will take the selector of the active tab in as its argument, and perform the tasks required. The <code>transition</code> method is very simple, it just hands off to <code>activateTab</code> and <code>activateLink</code>:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> transition = <span class="kw">function</span>(selector) {
+  <span class="fu">activateTab</span>(selector);
+  <span class="fu">activateLink</span>(selector);
+};</code></pre>
+<p>And now we can use that method in our code. In reality I did make this change in two steps, inserting one usage at a time, but I think you get the picture, so I’ll show it here as one change. Our new code looks like so:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> tabsWrapper = <span class="fu">$</span>(<span class="st">&quot;.tabs&quot;</span>);
+<span class="kw">var</span> tabs = <span class="ot">tabsWrapper</span>.<span class="fu">children</span>(<span class="st">&quot;div&quot;</span>);
+<span class="kw">var</span> tabLinks = <span class="ot">tabsWrapper</span>.<span class="fu">find</span>(<span class="st">&quot;.tab-link&quot;</span>);
+<span class="kw">var</span> activeClass = <span class="st">&quot;active&quot;</span>;
+
+<span class="kw">var</span> activateLink = <span class="kw">function</span>(elem) {
+  <span class="fu">$</span>(<span class="st">&quot;.&quot;</span> + activeClass).<span class="fu">removeClass</span>(activeClass);
+  <span class="fu">$</span>(elem).<span class="fu">addClass</span>(activeClass);
+};
+
+<span class="kw">var</span> activateTab = <span class="kw">function</span>(tabSelector) {
+  <span class="ot">tabs</span>.<span class="fu">hide</span>();
+  <span class="fu">$</span>(tabSelector).<span class="fu">show</span>();
+};
+
+<span class="kw">var</span> transition = <span class="kw">function</span>(selector) {
+  <span class="fu">activateTab</span>(selector);
+  <span class="fu">activateLink</span>(selector);
+};
+
+<span class="kw">var</span> active = <span class="ot">location</span>.<span class="fu">hash</span>;
+<span class="kw">if</span>(active) {
+  <span class="fu">transition</span>(active);
+}
+<span class="ot">tabLinks</span>.<span class="fu">click</span>(<span class="kw">function</span>() {
+  <span class="fu">transition</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&#39;));</span>
+  <span class="kw">return</span> <span class="kw">false</span>;
+});</code></pre>
+<h2 id="reflection">Reflection</h2>
+<p>There’s certainly more you could do with this code, and it’s also far from being the best implementation of tabs around, but I hope you agree with me that the end result is now much nicer than the one we had at the beginning, which is printed below for you to compare.</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> active = <span class="ot">location</span>.<span class="fu">hash</span>;
+<span class="kw">if</span>(active) {
+  <span class="fu">$</span>(<span class="st">&quot;.tabs&quot;</span>).<span class="fu">children</span>(<span class="st">&quot;div&quot;</span>).<span class="fu">hide</span>();
+  <span class="fu">$</span>(active).<span class="fu">show</span>();
+  <span class="fu">$</span>(<span class="st">&quot;.active&quot;</span>).<span class="fu">removeClass</span>(<span class="st">&quot;active&quot;</span>);
+  <span class="fu">$</span>(<span class="st">&quot;.tab-link&quot;</span>).<span class="fu">each</span>(<span class="kw">function</span>() {
+    <span class="kw">if</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>) === active) {
+      <span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>().<span class="fu">addClass</span>(<span class="st">&quot;active&quot;</span>);
+    }
+  });
+}
+<span class="fu">$</span>(<span class="st">&quot;.tabs&quot;</span>).<span class="fu">find</span>(<span class="st">&quot;.tab-link&quot;</span>).<span class="fu">click</span>(<span class="kw">function</span>() {
+  <span class="fu">$</span>(<span class="st">&quot;.tabs&quot;</span>).<span class="fu">children</span>(<span class="st">&quot;div&quot;</span>).<span class="fu">hide</span>();
+  <span class="fu">$</span>(<span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">attr</span>(<span class="st">&quot;href&quot;</span>)).<span class="fu">show</span>();
+  <span class="fu">$</span>(<span class="st">&quot;.active&quot;</span>).<span class="fu">removeClass</span>(<span class="st">&quot;active&quot;</span>);
+  <span class="fu">$</span>(<span class="kw">this</span>).<span class="fu">parent</span>().<span class="fu">addClass</span>(<span class="st">&quot;active&quot;</span>);
+  <span class="kw">return</span> <span class="kw">false</span>;
+});</code></pre>
+<p>By removing duplication and making things clearer, we’ve ended up with a solution that is more readable, self documenting and maintainable. Notice how at first glance the two different sections of the code looked very different, but after some initial refactorings we found them actually to be near identical. This is a common occurence - often a refactor will open up new possibilities and ways of working, which is another reason to keep your refactorings small and your mind open - an improvement might not be immediately obvious at the beginning.</p>
+</body>
+</html>
