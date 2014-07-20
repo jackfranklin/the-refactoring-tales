@@ -4,7 +4,7 @@ Welcome to The Refactoring Tales, a book that documents some of the refactorings
 
 Think of how much time you spend maintaining code, rather than being able to write code from scratch. Day to day, I'm not typically creating new projects, but I am maintaining, editing or refactoring existing projects. This book is just like that. Each chapter will start by looking at some existing code, and over the course of a few pages we will examine, disect and then refactor the code into an improved alternative. Of course, the idea of code being "better" is largely subjective, but even if you don't quite agree with every step I take, you should be able to see the overall benefits.
 
-The GitHub repository for this book is here: https://github.com/jackfranklin/the-refactoring-tales, both the raw book files and the code samples are all there for you to take. If you spot any issues as you read this book, a new issue (or even better, a pull request!) is greatly appreciated.
+The GitHub repository for this book is here: [https://github.com/jackfranklin/the-refactoring-tales](https://github.com/jackfranklin/the-refactoring-tales), both the raw book files and the code samples are all there for you to take. If you spot any issues as you read this book, a new issue (or even better, a pull request!) is greatly appreciated.
 
 ## Refactoring
 
@@ -28,5 +28,5 @@ You should also make sure you can run your tests easily. I have mine hooked up t
 
 ## Thanks
 
-There are so many people who have thanked me along the way that it would be wrong to not include some form of list of names in this book. Thanks in particular go to Addy Osmani, Drew Neil, Guy Routledge, Katja Durrani along with many more who have shaped this book since the idea formed.
+There are so many people who have thanked me along the way that it would be wrong to not include some form of list of names in this book. Thanks in particular go to Addy Osmani, Drew Neil, Guy Routledge, Katja Durrani, Adam Yeats, Stu Robson and Todd Motto along with many more who have shaped this book since the idea formed.
 

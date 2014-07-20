@@ -1,5 +1,6 @@
 source=chapters/*.md
 title='The Refactoring Tales'
+filename=therefactoringtales
 
 all: epub pdf mobi html
 
@@ -9,14 +10,14 @@ dir:
 	mkdir -p books
 
 epub: dir
-	pandoc -s -o books/book.epub --normalize --smart -t epub $(source) \
+	pandoc -s -o books/$(filename).epub --normalize --smart -t epub $(source) \
 		--toc \
 		--title-prefix $(title) \
 		--epub-metadata build/metadata.xml \
 		--epub-stylesheet epub.css
 
 pdf: dir
-	pandoc -s -o books/book.pdf $(source) \
+	pandoc -s -o books/$(filename).pdf $(source) \
 		--title-prefix $(title) \
 		--normalize \
 		--toc \
@@ -24,10 +25,13 @@ pdf: dir
 
 
 mobi: epub
-	cd books && kindlegen book.epub
+	cd books && kindlegen $(filename).epub
 
 html: dir
 	pandoc -s -c style.css -t html5 --normalize --smart --toc -o refactoring-tales.html $(source) \
 		--include-before-body build/author.html \
 		--title-prefix $(title)
+
+compress:
+	zip -r -X refactoring-tales.zip books
 
