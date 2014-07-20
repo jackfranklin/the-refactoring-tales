@@ -40,6 +40,7 @@ code > span.er { color: #ff0000; font-weight: bold; }
 <li><a href="#introduction">Introduction</a><ul>
 <li><a href="#refactoring">Refactoring</a></li>
 <li><a href="#tests">Tests</a></li>
+<li><a href="#thanks">Thanks</a></li>
 </ul></li>
 <li><a href="#tale-1-terrible-tabs">Tale 1: Terrible Tabs</a><ul>
 <li><a href="#reuse-of-selectors">Reuse of Selectors</a></li>
@@ -104,6 +105,8 @@ code > span.er { color: #ff0000; font-weight: bold; }
 <h2 id="tests">Tests</h2>
 <p>When refactoring, you need to have confidence in the fact that you’ve not broken anything. Similarly, if you do break something, you need to know immediately. This is where the benefit of having tests plays a key role. The ability to run a set of tests and get immediate feedback is fantastic, and that’s precisely what tests give you. It’s very easy these days to get started with tests, whether you’re writing Ruby, or JavaScript on the server with NodeJS, or in the browser, there are a myriad of tools available to you. This isn’t a book on testing, and I could write in huge depth on the subject, so for each example in this book, you should assume that I have tested it as I’ve gone (in actual fact for every example there is, I did have tests everytime). If you want to refactor but don’t have tests, write tests. Do not ever attempt to refactor without writing any tests. Ever.</p>
 <p>You should also make sure you can run your tests easily. I have mine hooked up through my editor, Vim, so I can hit a 3 key shortcut and have my tests run. Configure it however you want, and make sure it’s easy to do.</p>
+<h2 id="thanks">Thanks</h2>
+<p>There are so many people who have thanked me along the way that it would be wrong to not include some form of list of names in this book. Thanks in particular go to Addy Osmani, Drew Neil, Guy Routledge, Katja Durrani along with many more who have shaped this book since the idea formed.</p>
 <h1 id="tale-1-terrible-tabs">Tale 1: Terrible Tabs</h1>
 <p>One of the most common things any new jQuery user will try to do is build some basic HTML tabs. It’s like the initiation into the jQuery world (not quite, that’s carousels, which are next up) and it serves as a good starting point to show you the first refactoring.</p>
 <p>Here’s a JavaScript function called <code>tabularize</code> which, as you might expect, is a small function for creating a tabbed interface.</p>

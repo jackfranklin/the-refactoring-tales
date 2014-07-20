@@ -3,8 +3,10 @@ title='The Refactoring Tales'
 
 all: epub pdf mobi html
 
+sale: epub pdf mobi
+
 dir:
-	mkdir -p books/html
+	mkdir -p books
 
 epub: dir
 	pandoc -s -o books/book.epub --normalize --smart -t epub $(source) \
