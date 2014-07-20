@@ -142,3 +142,102 @@ EmailSender.init(emails).sendEmail();
 ```
 
 Notice how now the `EmailSender` has no knowledge of the `Parser` even existing. This now means if our data source were to change from being CSV to being from a database for example, we wouldn't have to change any code. We could introduce a new object responsible for pulling our emails out of the database, and then still use `EmailSender` just like before.
+
+## Publish and Subscribe
+
+Moving on to a different example, another method for keeping objects decoupled is the _Publish and Subscribe Pattern_, or _pubsub_ for short.
+
+In his (freely available online) book, ["Learning JavaScript Design Patterns"](http://addyosmani.com/resources/essentialjsdesignpatterns/book/), Addy Osmani summarises the goal of the pubsub pattern:
+
+> The general idea here is the promotion of loose coupling. Rather than single objects calling on the methods of other objects directly, they instead subscribe to a specific task or activity of another object and are notified when it occurs.
+
+This approach is particularly suited to browser code, because JavaScript is largely event driven. Let's look at an example where on the page we have a carousel and some tabs. When the user clicks on a tab to view some content, we want the carousel to stop running, so the user doesn't miss any of the content on the carousel.
+
+We might do it like so:
+
+```js
+var carousel = {
+  stop: function() {
+    // stop animation
+  }
+  ...
+}
+
+var tabs = {
+   tabClicked: function() {
+     carousel.stop();
+   }
+   ...
+}
+```
+
+This would work fine, but imagine if, along with a carousel, another element is added that needs to stop animating too? You'd have to add it to the `tabClicked` method:
+
+```js
+var carousel = {
+  stop: function() {
+    // stop animation
+  }
+  ...
+}
+
+var tabs = {
+   tabClicked: function() {
+     carousel.stop();
+     otherThing.stop();
+   }
+   ...
+}
+
+var otherThing = {
+  stop: function() {
+    // stop
+  }
+}
+```
+
+Although this is a slightly contrived example, I hope you can see that over time this is going to lead to some really messy code. It also means that we have to update our `tabClicked` method every time we add a new item, which is a little odd to me.
+
+We can solve this using pubsub. In pubsub you have an object, typically called `events` (hold tight, I'll link to some pubsub libraries you can use shortly). Objects can then use this pubsub object to publish events to, and subscribe to events that other objects publish. Here's the same code in that previous code block, but using an `events` object.
+
+```javascript
+var events = ... //pubsub object
+
+var carousel = {
+  init: function() {
+    events.on('tabClicked', this.stop);
+  },
+  stop: function() {
+    // stop animation
+  }
+  ...
+}
+
+var tabs = {
+   tabClicked: function() {
+     events.publish('tabClicked');
+   }
+   ...
+}
+
+var otherThing = {
+  init: function() {
+    events.on('tabClicked', this.stop);
+  },
+  stop: function() {
+    // stop
+  }
+}
+```
+
+Notice now how the tabs object just published an event, and both the others can just run some code when an event is published. Crucially though, if a new item is added, __the tabs code doesn't have to change__.
+
+In terms of pubsub implementations, there are a few to choose from:
+
+- [Ben Alman's tiny-pubsub](https://github.com/cowboy/jquery-tiny-pubsub)
+- [AmplifyJS](http://amplifyjs.com/api/pubsub/)
+- [PubSubJS](https://github.com/mroderick/PubSubJS)
+
+## Conclusion
+
+In this chapter we discussed the Single Responsibility Principle and the advantages it brings to the table. Getting into the habit of keeping your objects small and concerned with just one thing will make your code and overall applications much more maintainable and easier to work with as your application grows.
