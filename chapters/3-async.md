@@ -1,6 +1,6 @@
 # Tale 3: Async Abominations
 
-The code for this example comes directly from a project I was working on recently. I was building a NodeJS powered API, and as part of that, needed a way of validating parameters that were passed as query strings in the API request. Every single request needs to be passed a `token` parameter, which is matched to the token of a user in the database, and some requests take a `userId` parameter, along with a token. In the case that both the token and userId are passed in, we validate that the token is the token for that specific user. In the case wehre we just take in a token, we validate that the token is valid, and exists in our database.
+The code for this example comes directly from a project I was working on recently. I was building a NodeJS powered API, and as part of that, needed a way of validating parameters that were passed as query strings in the API request. Every single request needs to be passed a `token` parameter, which is matched to the token of a user in the database, and some requests take a `userId` parameter, along with a token. In the case that both the token and userId are passed in, we validate that the token is the token for that specific user. In the case where we just take in a token, we validate that the token is valid, and exists in our database.
 
 The API has many routes, so I wanted to abstract this into a function, which I called `validateParamsExist`. It is used like so:
 
@@ -193,7 +193,7 @@ var validateParamsExist = function(params, req, res, cb) {
 
 Doing this also means we can get rid of the `if(!req.query)` conditional that wrapped most of the body of the `validateParamsExist` method. I find exiting early is preferable to wrapping functions in large conditionals. These are what we call __guard clauses__ - a conditional which checks something that is required for the function to be able to run. If it's not there, it's best to figure it out right away and ditch out early. Some argue that functions having multiple returns makes them unclear, but I'd much rather that then have large conditionals wrapping functions. Those are much more unclear, in my opinion.
 
-The next abstraction is to pull out the code that checks for the existance of `token` and/or `userId` parameters.
+The next abstraction is to pull out the code that checks for the existence of `token` and/or `userId` parameters.
 
 ```javascript
 var checkTokenAndIds = function(p, req, errors, callback) {
@@ -236,10 +236,10 @@ The `checkTokenAndIds` is far from a perfect function, and later we will refacto
 When I started to look at this code, the first thing I spotted was how all of this code is wrapped within an `async.each` call. This is part of the fantastic [async](https://github.com/caolan/async) library. `async.each` offers a way to loop over an array and perform some asynchronous code for each, and then run some other code once all items have been looped over. The usage of it above though is far from sensible:
 
 
-1. The first part of the `async.each`, which checks for the existant of a parameter, is not asynchronous.
+1. The first part of the `async.each`, which checks for the existence of a parameter, is not asynchronous.
 2. The second part, which checks the validity of any token or userId params, only needs to run once, not every time.
 
-It turns out that the only part of this code which does need to run in a loop is the parameter existance check, and that's not asynchronous. We can run the code that checks for tokens and ids only once, so why is it in a loop?! (As an aside, when I wrote this code the first time I didn't spot this. Looking back, I'm not sure what I was thinking!).
+It turns out that the only part of this code which does need to run in a loop is the parameter existence check, and that's not asynchronous. We can run the code that checks for tokens and ids only once, so why is it in a loop?! (As an aside, when I wrote this code the first time I didn't spot this. Looking back, I'm not sure what I was thinking!).
 
 Making the first step of changes leaves us with code that looks like this:
 
@@ -295,7 +295,7 @@ var validateParamsExist = function(params, req, res, cb) {
 }
 ```
 
-And we're done! This example was slightly different to previous examples - whilst the previous two chapters had code that was pefectly OK but had potential for some improvement, this code was just plain misleading, poorly constructed and badly written. Imagine if you had to make a change to the validation logic, and you had this block of code as your starting point. Do you think you could do it easily? I'm pretty sure I couldn't.
+And we're done! This example was slightly different to previous examples - whilst the previous two chapters had code that was perfectly OK but had potential for some improvement, this code was just plain misleading, poorly constructed and badly written. Imagine if you had to make a change to the validation logic, and you had this block of code as your starting point. Do you think you could do it easily? I'm pretty sure I couldn't.
 
 ```javascript
 var validateParamsExist = function(params, req, res, cb) {
