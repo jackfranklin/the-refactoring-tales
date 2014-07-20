@@ -6,7 +6,7 @@ In this chapter we're not going to look in as much detail at implementation spec
 
 As always, we need some code to work with, and this time we're looking at some code that has to send emails. It takes in a CSV, which contains details of users, including their email address, and uses that data to get a list of emails, which it then takes and sends an email to.
 
-```js
+```javascript
 var EmailSender = {
   init: function(csv) {
     this.csv = csv;
@@ -38,7 +38,7 @@ To me, that looks like two distinct responsibilities. Whilst this might not be a
 
 Just like any other improvement, we're going to do it in small steps. Firstly, I can create a `Parser` object, that takes a CSV and can pull details out of it:
 
-```js
+```javascript
 var Parser = {
   init: function(csv) {
     this.csv = csv;
@@ -53,7 +53,7 @@ var Parser = {
 
 Now we have a `Parser` class that definitely fits the SRP - it knows how to parse data out of a CSV, and that's the way it should be. We can now go ahead and update our `EmailSender` object:
 
-```js
+```javascript
 var EmailSender = {
   init: function(csv) {
     this.csv = csv;
@@ -84,7 +84,7 @@ Some coupling is necessary, because without any coupling, no component would eve
 
 Looking at our code and where we're up to, I'd argue that we have some coupling going on that isn't required.
 
-```js
+```javascript
 var Parser = {
   init: function(csv) {
     this.csv = csv;
@@ -114,7 +114,7 @@ var EmailSender = {
 
 Here, `EmailSender` knows too much about how it gets emails. It knows that they come from the `Parser`, which uses a CSV as a data source. Why should the email sender know any of this? All we should give it is a set of emails, and it should do the rest. The next change we make is to decouple the components completely:
 
-```js
+```javascript
 var Parser = {
   init: function(csv) {
     this.csv = csv;
@@ -155,7 +155,7 @@ This approach is particularly suited to browser code, because JavaScript is larg
 
 We might do it like so:
 
-```js
+```javascript
 var carousel = {
   stop: function() {
     // stop animation
@@ -173,7 +173,7 @@ var tabs = {
 
 This would work fine, but imagine if, along with a carousel, another element is added that needs to stop animating too? You'd have to add it to the `tabClicked` method:
 
-```js
+```javascript
 var carousel = {
   stop: function() {
     // stop animation
