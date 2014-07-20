@@ -27,7 +27,9 @@ var tabularize = function() {
 };
 ```
 
-To help you put this together, here is the HTML that the code is applied to. We won't be looking at the HTML here, just the code, but this will help with picturing how it all works.
+The first part of the function deals with the case where there is a fragment identifier in the URL. For example, if someone visits `mysite.com/#tab2`, they should have tab 2 active when they load the page. The second part deals with a user clicking on a tab, and updating the content accordingly.
+
+To help you put this together, here is the HTML that the code is applied to.
 
 ```javascript
 <div class="tabs">
@@ -57,7 +59,7 @@ To help you put this together, here is the HTML that the code is applied to. We 
 There's a fair bit wrong with the JavaScript above, but it's not necessarily bad code. It performs the tasks that are required of it. There are a couple of bugs, but as refactorers, we are not here to change the behaviour of the code. It passes the tests (in the introduction we discussed how every refactoring must be backed by tests) and our aim is to change the design, not the behaviour, and pass all the tests. I won't show the tests, as they distract from the main purpose, but rest assured I did have them when making the changes I'm about to talk through and I was careful to keep them passing.
 
 ## Reuse of Selectors
-The key to refactoring is to make the smallest steps you possibly can. The first problem I'd like to tackle is the reuse of selectors.
+The key to refactoring is to make the smallest steps you possibly can. The first problem I'd like to tackle is the reuse of selectors. Let's take a look once more at that JavaScript:
 
 ```javascript
 var active = location.hash;
@@ -225,7 +227,7 @@ $(this).parent().addClass(activeClass);
 The first is slightly different, because it has to loop over the links to find the right element to work with, but both of these blocks are performing the same piece of work:
 
 1. Find the current element with the active class, and remove the active class.
-2. Take this new element's parent, and add the active class.
+2. Take the new active link's parent, and add the active class.
 
 When we have more than one block of code doing the same thing we can abstract them out into a function. Let's do that now:
 
@@ -236,7 +238,7 @@ var activateLink = function(elem) {
 };
 ```
 
-The `activateLink` function takes an element and adds the active class to it once it's first removed the active class from any other element that might have it. Now we have this function, we can use it in replace of the code we looked at previously. We'll do this change one at a time. Firstly, we can edit the code within the `tabLinks.click` handler:
+The `activateLink` function takes an element and adds the active class to it once it's first removed the active class from any other element that might have it. Now we have this function, we can use it in place of the code we looked at previously. We'll do this change one at a time. Firstly, we can edit the code within the `tabLinks.click` handler:
 
 ```javascript
 var tabsWrapper = $(".tabs");
