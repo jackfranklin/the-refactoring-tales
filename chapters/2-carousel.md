@@ -112,9 +112,7 @@ $(function() {
 
 I think JavaScript like this is JavaScript we've all written before. I know I have. Take a moment to study it and see if you can spot the problems with it. There's some much larger problems that we won't look at right now, but you should be able to spot a lot of "quick wins" that we can take care of right here and now. I highly recommend noting down on paper a list of all the problems you spot and comparing them to the one I came up with below, to see what you might miss and to see if you identify things I didn't.
 
-### Problems with the Carousel
-
-I've split my list into two parts. Firstly, the big problems:
+I've split my list of problems into two parts. Firstly, the big problems:
 
 - __Duplication__. the same block of code is used multiple times to animate the margin. Additionally, the event handlers for the click on `.left` and `.right` are almost identical too, along with numerous others.
 - __Bad Selectors__. There's very little in the way of contextual selectors. What I mean by this is the selectors are too general, `$("ul")` for example.
@@ -149,8 +147,6 @@ $(".right").click(function() {
 
 This topic was first talked about back in 2010 in Doug Neiner's article ["Stop (mis)using Return False](http://fuelyourcoding.com/jquery-events-stop-misusing-return-false/) and is still very much relevant today.
 
-### The event object
-
 jQuery event handlers take one argument, the _event object_. This object contains information about the event that triggered the event handler to fire. This object not only contains properties, such as the co-ordinates of the mouse pointer when the event took place, but also methods, including `preventDefault()` and `stopPropagation()`.
 
 _Normally_ when a developer writes `return false`, what they actually want is to pass the event object in and call `event.preventDefault()`, like so:
@@ -163,8 +159,6 @@ $(".right").click(function(event) {
 ```
 
 As I'm sure you're aware, `preventDefault()` prevents the default action being taken. `return false` has the same effect, but it does something else too.
-
-### Propagation
 
 Let's just head out on a quick tangent to fully discuss propagation. Take a look at the code sample below:
 
@@ -183,8 +177,6 @@ $(function() {
 
 If you were to load that up in a browser and click on the `p` element within the `div` element, what would you see in the console? You would only see the second log statement, "p got clicked". `event.stopPropagation()` _stops the event from bubbling up the DOM tree_. There are occasions when this is useful but the majority of the time, you don't want this. What you might not realise though, is that __return false; has the same effect__. `return false` has the same effect as calling `preventDefault()` and `stopPropagation()`. This can lead to nasty side effects or bugs later which can be incredibly difficult and frustrating to deal with - trust me, I've been there.
 
-### Be Explicit
-
 So although it might take longer, it's much better to be a bit more verbose here. If you only want the default action to be prevented, call `preventDefault()`. If you want propagation to be prevented, call `stopPropagation()`. If you want them both, __don't type__ `return false;`. Be explicit and type them both out:
 
 ```javascript
@@ -192,11 +184,7 @@ event.stopPropagation();
 event.preventDefault();
 ```
 
-### Where in the event handler?
-
 The question on where it makes sense to place calls to `preventDefault()` and `stopPropagation()` is largely down to you and your preference, but I like to put them at the top as the very first thing that happens in the method. That way it's easily spotted if you or another developer is reading through the code to see what it does.
-
-### Quick Win Number 1
 
 So for our first quick win, we can swap out `return false` with calls to `event.preventDefault()`. I've also put `event.preventDefault()` at the top, above the rest of the event handler code (which I've left out here just to save room).
 
@@ -215,8 +203,6 @@ $(".right").click(function(event) {
 
 In jQuery 1.7 there was a new API introduced for binding and unbinding event handlers in the form of `on()` and `off()` to supersede the old API which was (and still is) a myriad of methods like `click()`, `hover()`, `mouseout()` along with `live()`, `bind()` and so on. This point may be a bit contentious, but I think that `on()` and `off()` are absolutely vast improvements and the fact that the entire event binding API was able to be reduced to two methods is brilliant. Of course, the old methods are not going anywhere (imagine how much code would break!) but as a rule I now will never use `click()` or similar, and will always use `on("click", function() {})`. This isn't going to bring you huge speed improvements or even gain any readability, but personally I do think it reads slightly nicer.
 
-### Quick Win Number 2
-
 This one's easy. Just swap out the calls to `click` with `on`:
 
 ```javascript
@@ -234,8 +220,6 @@ $(".right").on("click", function(event) {
 
 Our code has some numbers that crop up time and time again. The first is `300`, which I'd refer to as a "Magic Number" and we'll tackle separately. The second is `10000`. This isn't so much a magic number in my opinion as it's not connected with the page as much. `300` refers to the width of an image, but it's not immediately apparent looking at the code that that is the case. We should treat it differently, and we will. `10000` has no connections, it's just simply the time we decided should be between each automatic progression of our carousel.
 
-### Constants
-
 If I were in another language that has _constants_, I'd define this value as a constant at the top of the file. For example, if this was the language Ruby I could simply do:
 
 ```ruby
@@ -244,7 +228,6 @@ CAROUSEL_TRANSITION_TIME = 10000
 
 That constant would then be set to 10,000 and nothing could possibly change it later on.
 
-### Quick Win Number 3
 Although JavaScript doesn't have constants, a convention has formed that any variable in capital letters should be treated as such. So I'd actually type exactly what I typed above in the Ruby example, and place it towards the top of the JavaScript file:
 
 ```javascript
@@ -273,18 +256,12 @@ I> Remember that constants should never be altered - in languages with actual su
 
 This is something that everybody _should_ do but people don't always do it (I know I'm guilty). jQuery makes it so easy to quickly query the DOM for something that it's easy to just keep doing it and pay no attention to if you've done that previously or not. The common argument for this is largely performance. Whilst there is an obvious performance increase if you can avoid doing something multiple times, I would argue that today the main reason behind this should be the maintainability of your code. In the previous section we just swapped out occurrences of `10000` with a constant which took us from 3 changes down to 1 if that number should change.
 
-### Selector Abuse
-
 Take a look at the carousel code and selectors that come up time and time again. There's not too many unique selectors but they all occur multiple times:
 
 - `ul` (5 times)
 - `.controls span` (5 times)
 - `.left` (4 times)
 - `.right` (once)
-
-A> If you're thinking that `.control span` isn't the best selector to use, you'd be right. We'll be taking a closer look at selectors in Chapter 4.
-
-### Quick Win Number 4
 
 The fix for this is simple, and I'm sure you already know what's coming up. __Cache those selectors!__.
 
@@ -305,11 +282,7 @@ Make changes and alterations as frictionless as possible and everyone's happy.
 
 We're going to look more in depth at functions in a later chapter, where we'll discuss their usage and some technical details in depth. This section can serve as a precursor to that.
 
-### Don't be afraid!
-
 A lot of people I talk to our teach seem wary of using functions, like they come with some huge cost  that people can't afford. In other communities like the Ruby one (which I'll reference purely because it's the one I'm most familiar with) it's very common to see posts heavily advocating using methods in Ruby. Ben Orenstein talks heavily about how he's incredibly aggressive at abstracting code into new methods and having methods of extremely short length. I agree with Ben's approach entirely we can certainly take some of what he says and apply it to our code.
-
-### Quick Win Number 5
 
 As I said, we'll go much more into this later, but for now let's look at one quick example. This very line crops up four times:
 
