@@ -4,8 +4,7 @@
   <meta charset="utf-8">
   <meta name="generator" content="pandoc">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <meta name="author" content="Jack Franklin">
-  <title>The Refactoring Tales</title>
+  <title>The Refactoring Tales - </title>
   <style type="text/css">code{white-space: pre;}</style>
   <!--[if lt IE 9]>
     <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
@@ -32,15 +31,15 @@ code > span.er { color: #ff0000; font-weight: bold; }
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header>
-<h1 class="title">The Refactoring Tales</h1>
-<h2 class="author">Jack Franklin</h2>
-</header>
+<p>
+  <h1>The Refactoring Tales</h1>
+  <h3>By Jack Franklin (<a href="http://twitter.com/jack_franklin">@jack_franklin</a>)</h3>
+</p>
 <nav id="TOC">
 <ul>
 <li><a href="#introduction">Introduction</a><ul>
 <li><a href="#refactoring">Refactoring</a></li>
-<li><a href="#tests"> Tests</a></li>
+<li><a href="#tests">Tests</a></li>
 </ul></li>
 <li><a href="#tale-1-terrible-tabs">Tale 1: Terrible Tabs</a><ul>
 <li><a href="#reuse-of-selectors">Reuse of Selectors</a></li>
@@ -51,6 +50,39 @@ code > span.er { color: #ff0000; font-weight: bold; }
 <li><a href="#one-method-to-rule-them-all">One method to rule them all</a></li>
 <li><a href="#reflection">Reflection</a></li>
 </ul></li>
+<li><a href="#tale-2-cringy-carousels">Tale 2: Cringy Carousels</a><ul>
+<li><a href="#the-carousel">The Carousel</a><ul>
+<li><a href="#problems-with-the-carousel">Problems with the Carousel</a></li>
+</ul></li>
+<li><a href="#return-false-the-anti-pattern">return false; the anti-pattern</a><ul>
+<li><a href="#the-event-object">The event object</a></li>
+<li><a href="#propagation">Propagation</a></li>
+<li><a href="#be-explicit">Be Explicit</a></li>
+<li><a href="#where-in-the-event-handler">Where in the event handler?</a></li>
+<li><a href="#quick-win-number-1">Quick Win Number 1</a></li>
+</ul></li>
+<li><a href="#on-and-off">on() and off()</a><ul>
+<li><a href="#quick-win-number-2">Quick Win Number 2</a></li>
+</ul></li>
+<li><a href="#repeated-numbers">Repeated Numbers</a><ul>
+<li><a href="#constants">Constants</a></li>
+<li><a href="#quick-win-number-3">Quick Win Number 3</a></li>
+</ul></li>
+<li><a href="#caching-selectors">Caching selectors</a><ul>
+<li><a href="#selector-abuse">Selector Abuse</a></li>
+<li><a href="#quick-win-number-4">Quick Win Number 4</a></li>
+</ul></li>
+<li><a href="#functions">functions</a><ul>
+<li><a href="#dont-be-afraid">Don’t be afraid!</a></li>
+<li><a href="#quick-win-number-5">Quick Win Number 5</a></li>
+</ul></li>
+<li><a href="#summary">Summary</a></li>
+</ul></li>
+<li><a href="#tale-3-async-abominations">Tale 3: Async Abominations</a><ul>
+<li><a href="#the-code">The code</a></li>
+<li><a href="#back-to-the-beginning">Back to the beginning</a></li>
+<li><a href="#abstracting-functions">Abstracting functions</a></li>
+</ul></li>
 </ul>
 </nav>
 <h1 id="introduction">Introduction</h1>
@@ -58,7 +90,7 @@ code > span.er { color: #ff0000; font-weight: bold; }
 <p>Think of how much time you spend maintaining code, rather than being able to write code from scratch. Day to day, I’m not typically creating new projects, but I am maintaining, editing or refactoring existing projects. This book is just like that. Each chapter will start by looking at some existing code, and over the course of a few pages we will examine, disect and then refactor the code into an improved alternative. Of course, the idea of code being “better” is largely subjective, but even if you don’t quite agree with every step I take, you should be able to see the overall benefits.</p>
 <p>The GitHub repository for this book is here: https://github.com/jackfranklin/the-refactoring-tales, both the raw book files and the code samples are all there for you to take. If you spot any issues as you read this book, a new issue (or even better, a pull request!) is greatly appreciated.</p>
 <h2 id="refactoring">Refactoring</h2>
-<p>Before we continue I think it’s important to define just what exactly I mean when I say “refactoring”. Refactoring has lots of definitions, but I think my favourite and the one I stick to is that of Martin Fowler, in his <a href="http://martinfowler.com/books/refactoring.html">book on refactoring</a></p>
+<p>Before we continue I think it’s important to define just what exactly I mean when I say “refactoring”. Refactoring has lots of definitions, but I think my favourite and the one I stick to is that of Martin Fowler, in his <a href="http://martinfowler.com/books/refactoring.html">book on refactoring</a>:</p>
 <blockquote>
 <p>Refactoring is a controlled technique for improving the design of an existing code base. Its essence is applying a series of small behavior-preserving transformations, each of which “too small to be worth doing”.</p>
 </blockquote>
@@ -69,7 +101,7 @@ code > span.er { color: #ff0000; font-weight: bold; }
 <li>clear in its intention; it should read somewhat like a story, and at a quick skim the overall function of that block of code should be apparent</li>
 </ul>
 <p>In his book <a href="http://www.wrox.com/WileyCDA/WroxTitle/productCd-0764579088.html">Professional JavaScript for Web Developers</a>, Nicholas Zakas has a brilliant definition of maintainability which cites the following characteristics: Understandable, intuitive, adaptable, extendable and debuggable. It’s these traits that I hope this book will help you adhere to and aim for.</p>
-<h2 id="tests"> Tests</h2>
+<h2 id="tests">Tests</h2>
 <p>When refactoring, you need to have confidence in the fact that you’ve not broken anything. Similarly, if you do break something, you need to know immediately. This is where the benefit of having tests plays a key role. The ability to run a set of tests and get immediate feedback is fantastic, and that’s precisely what tests give you. It’s very easy these days to get started with tests, whether you’re writing Ruby, or JavaScript on the server with NodeJS, or in the browser, there are a myriad of tools available to you. This isn’t a book on testing, and I could write in huge depth on the subject, so for each example in this book, you should assume that I have tested it as I’ve gone (in actual fact for every example there is, I did have tests everytime). If you want to refactor but don’t have tests, write tests. Do not ever attempt to refactor without writing any tests. Ever.</p>
 <p>You should also make sure you can run your tests easily. I have mine hooked up through my editor, Vim, so I can hit a 3 key shortcut and have my tests run. Configure it however you want, and make sure it’s easy to do.</p>
 <h1 id="tale-1-terrible-tabs">Tale 1: Terrible Tabs</h1>
@@ -517,5 +549,605 @@ code > span.er { color: #ff0000; font-weight: bold; }
   <span class="kw">return</span> <span class="kw">false</span>;
 });</code></pre>
 <p>By removing duplication and making things clearer, we’ve ended up with a solution that is more readable, self documenting and maintainable. Notice how at first glance the two different sections of the code looked very different, but after some initial refactorings we found them actually to be near identical. This is a common occurence - often a refactor will open up new possibilities and ways of working, which is another reason to keep your refactorings small and your mind open - an improvement might not be immediately obvious at the beginning.</p>
+<h1 id="tale-2-cringy-carousels">Tale 2: Cringy Carousels</h1>
+<p>In this chapter I want to talk about the value of some “quick wins” - very simple refactorings that, when applied to a codebase, will hugely improve the readability and maintainability of the project, at very little time and effort to yourself. You may find yourself too busy to fully refactor a huge method, but with these small steps you can make large gains quickly.</p>
+<h2 id="the-carousel">The Carousel</h2>
+<p>I’ve put together a simple enough jQuery Carousel which boasts the following feature set:</p>
+<ul>
+<li>‘Left’ and ‘Right’ links to navigate the carousel</li>
+<li>Moves automatically every 10 seconds</li>
+<li>If you hit the page with a hash such as <code>#image2</code>, it will move the carousel to that image.</li>
+</ul>
+<p>Hardily a fully featured carousel but it covers the basic functionality of most carousels I’ve seen, and those features provide enough scope for me to produce bad code that we can tidy. Take a deep breath and we’ll dive in.</p>
+<p>First, there’s the HTML. Pretty simple and standard really:</p>
+<pre class="sourceCode html"><code class="sourceCode html"><span class="dt">&lt;!DOCTYPE </span>html<span class="dt">&gt;</span>
+<span class="kw">&lt;html&gt;</span>
+<span class="kw">&lt;head&gt;</span>
+  <span class="kw">&lt;title&gt;&lt;/title&gt;</span>
+  <span class="kw">&lt;link</span><span class="ot"> rel=</span><span class="st">&quot;stylesheet&quot;</span><span class="ot"> href=</span><span class="st">&quot;css/style.css&quot;</span><span class="kw">&gt;</span>
+  <span class="kw">&lt;script</span><span class="ot"> src=</span><span class="st">&quot;js/jquery.min.js&quot;</span><span class="kw">&gt;&lt;/script&gt;</span>
+  <span class="kw">&lt;script</span><span class="ot"> src=</span><span class="st">&quot;js/app.js&quot;</span><span class="kw">&gt;&lt;/script&gt;</span>
+<span class="kw">&lt;/head&gt;</span>
+<span class="kw">&lt;body&gt;</span>
+  <span class="kw">&lt;div</span><span class="ot"> class=</span><span class="st">&quot;wrapper&quot;</span><span class="kw">&gt;</span>
+    <span class="kw">&lt;ul&gt;</span>
+      <span class="kw">&lt;li&gt;&lt;img</span><span class="ot"> src=</span><span class="st">&quot;http://placekitten.com/300/300&quot;</span><span class="ot"> alt=</span><span class="st">&quot;Kitten&quot;</span> <span class="kw">/&gt;&lt;/li&gt;</span>
+      <span class="kw">&lt;li&gt;&lt;img</span><span class="ot"> src=</span><span class="st">&quot;http://placekitten.com/300/300&quot;</span><span class="ot"> alt=</span><span class="st">&quot;Kitten&quot;</span> <span class="kw">/&gt;&lt;/li&gt;</span>
+      <span class="kw">&lt;li&gt;&lt;img</span><span class="ot"> src=</span><span class="st">&quot;http://placekitten.com/300/300&quot;</span><span class="ot"> alt=</span><span class="st">&quot;Kitten&quot;</span> <span class="kw">/&gt;&lt;/li&gt;</span>
+      <span class="kw">&lt;li&gt;&lt;img</span><span class="ot"> src=</span><span class="st">&quot;http://placekitten.com/300/300&quot;</span><span class="ot"> alt=</span><span class="st">&quot;Kitten&quot;</span> <span class="kw">/&gt;&lt;/li&gt;</span>
+      <span class="kw">&lt;li&gt;&lt;img</span><span class="ot"> src=</span><span class="st">&quot;http://placekitten.com/300/300&quot;</span><span class="ot"> alt=</span><span class="st">&quot;Kitten&quot;</span> <span class="kw">/&gt;&lt;/li&gt;</span>
+    <span class="kw">&lt;/ul&gt;</span>
+    <span class="kw">&lt;div</span><span class="ot"> class=</span><span class="st">&quot;controls&quot;</span><span class="kw">&gt;</span>
+      <span class="kw">&lt;a</span><span class="ot"> href=</span><span class="st">&quot;#&quot;</span><span class="ot"> class=</span><span class="st">&quot;left&quot;</span><span class="kw">&gt;</span>Left<span class="kw">&lt;/a&gt;</span>
+      <span class="kw">&lt;a</span><span class="ot"> href=</span><span class="st">&quot;#&quot;</span><span class="ot"> class=</span><span class="st">&quot;right&quot;</span><span class="kw">&gt;</span>Right<span class="kw">&lt;/a&gt;</span>
+      <span class="kw">&lt;span&gt;&lt;/span&gt;</span>
+    <span class="kw">&lt;/div&gt;</span>
+  <span class="kw">&lt;/div&gt;</span>
+<span class="kw">&lt;/body&gt;</span>
+<span class="kw">&lt;/html&gt;</span></code></pre>
+<p>There is also some CSS applied to make it look good, but we won’t be focusing on that.</p>
+<p>Finally, the JavaScript:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="fu">$</span>(<span class="kw">function</span>() {
+  <span class="kw">if</span>(<span class="ot">location</span>.<span class="fu">hash</span> &amp;&amp; <span class="ot">location</span>.<span class="ot">hash</span>.<span class="fu">indexOf</span>(<span class="st">&quot;image&quot;</span>) &gt; -<span class="dv">1</span>) {
+    <span class="kw">var</span> number = <span class="fu">parseInt</span>(<span class="ot">location</span>.<span class="ot">hash</span>.<span class="fu">charAt</span>(<span class="ot">location</span>.<span class="ot">hash</span>.<span class="fu">length</span> -<span class="dv">1</span>));
+    <span class="fu">$</span>(<span class="st">&quot;ul&quot;</span>).<span class="fu">animate</span>({
+      <span class="st">&quot;margin-left&quot;</span>: number * -<span class="dv">300</span>
+    }, <span class="kw">function</span>() {
+      currentImage = number;
+      <span class="fu">$</span>(<span class="st">&quot;.controls span&quot;</span>).<span class="fu">text</span>(<span class="st">&quot;Current: &quot;</span> + (currentImage + <span class="dv">1</span>));
+    });
+  }
+  <span class="kw">var</span> timeout = <span class="fu">setTimeout</span>(<span class="kw">function</span>() {
+    <span class="fu">$</span>(<span class="st">&quot;.left&quot;</span>).<span class="fu">trigger</span>(<span class="st">&quot;click&quot;</span>);
+  }, <span class="dv">10000</span>);
+  
+  <span class="kw">var</span> currentImage = <span class="dv">0</span>;
+  <span class="fu">$</span>(<span class="st">&quot;.left&quot;</span>).<span class="fu">click</span>(<span class="kw">function</span>() {
+    <span class="fu">clearTimeout</span>(timeout);
+    <span class="kw">if</span>(currentImage == <span class="fu">$</span>(<span class="st">&quot;li&quot;</span>).<span class="fu">length</span> - <span class="dv">1</span>) {
+      <span class="fu">$</span>(<span class="st">&quot;ul&quot;</span>).<span class="fu">animate</span>({
+        <span class="st">&quot;margin-left&quot;</span>: <span class="dv">0</span>
+      }, <span class="kw">function</span>() {
+        currentImage = <span class="dv">0</span>;
+        <span class="fu">$</span>(<span class="st">&quot;.controls span&quot;</span>).<span class="fu">text</span>(<span class="st">&quot;Current: &quot;</span> + (currentImage + <span class="dv">1</span>));
+      });
+    } <span class="kw">else</span> {
+      <span class="fu">$</span>(<span class="st">&quot;ul&quot;</span>).<span class="fu">animate</span>({
+        <span class="st">&quot;margin-left&quot;</span>: <span class="st">&quot;-=300px&quot;</span>
+      }, <span class="kw">function</span>() {
+        currentImage+=<span class="dv">1</span>;
+        <span class="fu">$</span>(<span class="st">&quot;.controls span&quot;</span>).<span class="fu">text</span>(<span class="st">&quot;Current: &quot;</span> + (currentImage + <span class="dv">1</span>));
+      });
+    }
+    timeout = <span class="fu">setTimeout</span>(<span class="kw">function</span>() {
+      <span class="fu">$</span>(<span class="st">&quot;.left&quot;</span>).<span class="fu">trigger</span>(<span class="st">&quot;click&quot;</span>);
+    }, <span class="dv">10000</span>);
+    <span class="kw">return</span> <span class="kw">false</span>;
+  });
+  
+  <span class="fu">$</span>(<span class="st">&quot;.right&quot;</span>).<span class="fu">click</span>(<span class="kw">function</span>() {
+    <span class="fu">clearTimeout</span>(timeout);
+    <span class="kw">if</span>(currentImage == <span class="dv">0</span>) {
+      <span class="fu">$</span>(<span class="st">&quot;ul&quot;</span>).<span class="fu">animate</span>({
+        <span class="st">&quot;margin-left&quot;</span>: (<span class="fu">$</span>(<span class="st">&quot;li&quot;</span>).<span class="fu">length</span> - <span class="dv">1</span>) * -<span class="dv">300</span>
+      }, <span class="kw">function</span>() {
+        currentImage = <span class="fu">$</span>(<span class="st">&quot;li&quot;</span>).<span class="fu">length</span> - <span class="dv">1</span>;
+        <span class="fu">$</span>(<span class="st">&quot;.controls span&quot;</span>).<span class="fu">text</span>(<span class="st">&quot;Current: &quot;</span> + (currentImage + <span class="dv">1</span>));
+      });
+    } <span class="kw">else</span> {
+      <span class="fu">$</span>(<span class="st">&quot;ul&quot;</span>).<span class="fu">animate</span>({
+        <span class="st">&quot;margin-left&quot;</span>: <span class="st">&quot;+=300px&quot;</span>
+      }, <span class="kw">function</span>() {
+        currentImage-=<span class="dv">1</span>;
+        <span class="fu">$</span>(<span class="st">&quot;.controls span&quot;</span>).<span class="fu">text</span>(<span class="st">&quot;Current: &quot;</span> + (currentImage + <span class="dv">1</span>));
+      });
+    }
+    timeout = <span class="fu">setTimeout</span>(<span class="kw">function</span>() {
+      <span class="fu">$</span>(<span class="st">&quot;.left&quot;</span>).<span class="fu">trigger</span>(<span class="st">&quot;click&quot;</span>);
+    }, <span class="dv">10000</span>);
+    <span class="kw">return</span> <span class="kw">false</span>;
+  });
+});</code></pre>
+<p>I think JavaScript like this is JavaScript we’ve all written before. I know I have. Take a moment to study it and see if you can spot the problems with it. There’s some much larger problems that we won’t look at right now, but you should be able to spot a lot of “quick wins” that we can take care of right here and now. I highly recommend noting down on paper a list of all the problems you spot and comparing them to the one I came up with below, to see what you might miss and to see if you identify things I didn’t.</p>
+<h3 id="problems-with-the-carousel">Problems with the Carousel</h3>
+<p>I’ve split my list into two parts. Firstly, the big problems:</p>
+<ul>
+<li><strong>Duplication</strong>. the same block of code is used multiple times to animate the margin. Additionally, the event handlers for the click on <code>.left</code> and <code>.right</code> are almost identical too, along with numerous others.</li>
+<li><strong>Bad Selectors</strong>. There’s very little in the way of contextual selectors. What I mean by this is the selectors are too general, <code>$(&quot;ul&quot;)</code> for example.</li>
+<li><strong>Magic Values</strong>. A new developer reading this would have no idea why the number <code>300</code> crops up so regularly. Nor would it be immediately obvious why this was sometimes negative 300.</li>
+<li><strong>Reusing selectors</strong>. By my count there are <strong>15</strong> invocations of <code>$(thing)</code>, often with the same thing passed in as on a line previous.</li>
+<li><strong>document ready abuse</strong>. All the code is within one <code>$(function() {})</code> block.</li>
+</ul>
+<p>Remember, <code>$(function() {})</code> is shorthand for <code>$(document).ready(function() {})</code>. Whenever you pass a function into <code>$()</code>, jQuery will presume you want it to run only when the document is ready.</p>
+<p>And some things we can clean up immediately:</p>
+<ul>
+<li>Use of <code>return false</code>. Generally passing the event into the handler function and calling <code>e.preventDefault()</code> is preferred (I’ll discuss why in more detail shortly).</li>
+<li>Using <code>click()</code> instead of the newer <code>on()</code> API.</li>
+<li>Referencing the number <code>10000</code> more than once. What if the client decides this number should be <code>5000</code>? We’d have to change it in three separate places.</li>
+<li>We can easily cache some selectors into variables, such as <code>$(&quot;.controls span&quot;)</code>.</li>
+<li>We can look at abstracting some of the duplication into functions. For example, lines 23, 30, 46 and 53 are identical.</li>
+</ul>
+<h2 id="return-false-the-anti-pattern">return false; the anti-pattern</h2>
+<p>Currently both the event handlers end with <code>return false</code>:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="fu">$</span>(<span class="st">&quot;.left&quot;</span>).<span class="fu">click</span>(<span class="kw">function</span>() {
+  <span class="co">// things happen here</span>
+  <span class="kw">return</span> <span class="kw">false</span>;
+});
+<span class="fu">$</span>(<span class="st">&quot;.right&quot;</span>).<span class="fu">click</span>(<span class="kw">function</span>() {
+  <span class="co">// things happen here</span>
+  <span class="kw">return</span> <span class="kw">false</span>;
+});</code></pre>
+<p>This topic was first talked about back in 2010 in Doug Neiner’s article <a href="http://fuelyourcoding.com/jquery-events-stop-misusing-return-false/">“Stop (mis)using Return False</a> and is still very much relevant today.</p>
+<h3 id="the-event-object">The event object</h3>
+<p>jQuery event handlers take one argument, the <em>event object</em>. This object contains information about the event that triggered the event handler to fire. This object not only contains properties, such as the co-ordinates of the mouse pointer when the event took place, but also methods, including <code>preventDefault()</code> and <code>stopPropagation()</code>.</p>
+<p><em>Normally</em> when a developer writes <code>return false</code>, what they actually want is to pass the event object in and call <code>event.preventDefault()</code>, like so:</p>
+<pre><code>$(&quot;.right&quot;).click(function(event) {
+  // things happen here
+  event.preventDefault();
+});</code></pre>
+<p>As I’m sure you’re aware, <code>preventDefault()</code> prevents the default action being taken. <code>return false</code> has the same effect, but it does something else too.</p>
+<h3 id="propagation">Propagation</h3>
+<p>Let’s just head out on a quick tangent to fully discuss propagation. Take a look at the code sample below:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="fu">$</span>(<span class="kw">function</span>() {
+  <span class="fu">$</span>(<span class="st">&quot;div&quot;</span>).<span class="fu">on</span>(<span class="st">&quot;click&quot;</span>, <span class="kw">function</span>() {
+    <span class="ot">console</span>.<span class="fu">log</span>(<span class="st">&quot;div got clicked&quot;</span>);
+  });
+  
+  <span class="fu">$</span>(<span class="st">&quot;div p&quot;</span>).<span class="fu">on</span>(<span class="st">&quot;click&quot;</span>, <span class="kw">function</span>(e) {
+    <span class="ot">console</span>.<span class="fu">log</span>(<span class="st">&quot;p got clicked&quot;</span>);
+    <span class="ot">e</span>.<span class="fu">stopPropagation</span>();
+  });
+});</code></pre>
+<p>If you were to load that up in a browser and click on the <code>p</code> element within the <code>div</code> element, what would you see in the console? You would only see the second log statement, “p got clicked”. <code>event.stopPropagation()</code> <em>stops the event from bubbling up the DOM tree</em>. There are occassions when this is useful but the majority of the time, you don’t want this. What you might not realise though, is that <strong>return false; has the same effect</strong>. <code>return false</code> has the same effect as calling <code>preventDefault()</code> and <code>stopPropagation()</code>. This can lead to nasty side effects or bugs later which can be incredibly difficult and frustrating to deal with - trust me, I’ve been there.</p>
+<h3 id="be-explicit">Be Explicit</h3>
+<p>So although it might take longer, it’s much better to be a bit more verbose here. If you only want the default action to be prevented, call <code>preventDefault()</code>. If you want propagation to be prevented, call <code>stopPropagation()</code>. If you want them both, <strong>don’t type</strong> <code>return false;</code>. Be explict and type them both out:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="ot">event</span>.<span class="fu">stopPropagation</span>();
+<span class="ot">event</span>.<span class="fu">preventDefault</span>();</code></pre>
+<h3 id="where-in-the-event-handler">Where in the event handler?</h3>
+<p>The question on where it makes sense to place calls to <code>preventDefault()</code> and <code>stopPropagation()</code> is largely down to you and your preference, but I like to put them at the top as the very first thing that happens in the method. That way it’s easily spotted if you or another developer is reading through the code to see what it does.</p>
+<h3 id="quick-win-number-1">Quick Win Number 1</h3>
+<p>So for our first quick win, we can swap out <code>return false</code> with calls to <code>event.preventDefault()</code>. I’ve also put <code>event.preventDefault()</code> at the top, above the rest of the event handler code (which I’ve left out here just to save room).</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="fu">$</span>(<span class="st">&quot;.left&quot;</span>).<span class="fu">click</span>(<span class="kw">function</span>(event) {
+  <span class="ot">event</span>.<span class="fu">preventDefault</span>();
+  <span class="co">// things happen here</span>
+});
+<span class="fu">$</span>(<span class="st">&quot;.right&quot;</span>).<span class="fu">click</span>(<span class="kw">function</span>(event) {
+  <span class="ot">event</span>.<span class="fu">preventDefault</span>();
+  <span class="co">// things happen here</span>
+});</code></pre>
+<h2 id="on-and-off">on() and off()</h2>
+<p>In jQuery 1.7 there was a new API introduced for binding and unbinding event handlers in the form of <code>on()</code> and <code>off()</code> to supercede the old API which was (and still is) a myriad of methods like <code>click()</code>, <code>hover()</code>, <code>mouseout()</code> along with <code>live()</code>, <code>bind()</code> and so on. This point may be a bit contentious, but I think that <code>on()</code> and <code>off()</code> are absolutely vast improvements and the fact that the entire event binding API was able to be reduced to two methods is brilliant. Of course, the old methods are not going anywhere (imagine how much code would break!) but as a rule I now will never use <code>click()</code> or similar, and will always use <code>on(&quot;click&quot;, function() {})</code>. This isn’t going to bring you huge speed improvements or even gain any readability, but personally I do think it reads slightly nicer.</p>
+<h3 id="quick-win-number-2">Quick Win Number 2</h3>
+<p>This one’s easy. Just swap out the calls to <code>click</code> with <code>on</code>:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="fu">$</span>(<span class="st">&quot;.left&quot;</span>).<span class="fu">on</span>(<span class="st">&quot;click&quot;</span>, <span class="kw">function</span>(event) {
+  <span class="ot">event</span>.<span class="fu">preventDefault</span>();
+  <span class="co">// things happen here</span>
+});
+<span class="fu">$</span>(<span class="st">&quot;.right&quot;</span>).<span class="fu">on</span>(<span class="st">&quot;click&quot;</span>, <span class="kw">function</span>(event) {
+  <span class="ot">event</span>.<span class="fu">preventDefault</span>();
+  <span class="co">// things happen here</span>
+});</code></pre>
+<h2 id="repeated-numbers">Repeated Numbers</h2>
+<p>Our code has some numbers that crop up time and time again. The first is <code>300</code>, which I’d refer to as a “Magic Number” and we’ll tackle separately. The second is <code>10000</code>. This isn’t so much a magic number in my opinion as it’s not connected with the page as much. <code>300</code> refers to the width of an image, but it’s not immediately apparent looking at the code that that is the case. We should treat it differently, and we will. <code>10000</code> has no connections, it’s just simply the time we decided should be between each automatic progression of our carousel.</p>
+<h3 id="constants">Constants</h3>
+<p>If I were in another language that has <em>constants</em>, I’d define this value as a constant at the top of the file. For example, if this was the language Ruby I could simply do:</p>
+<pre class="sourceCode ruby"><code class="sourceCode ruby"><span class="dt">CAROUSEL_TRANSITION_TIME</span> = <span class="dv">10000</span></code></pre>
+<p>That constant would then be set to 10,000 and nothing could possibly change it later on.</p>
+<h3 id="quick-win-number-3">Quick Win Number 3</h3>
+<p>Although JavaScript doesn’t have constants, a convention has formed that any variable in capital letters should be treated as such. So I’d actually type exactly what I typed above in the Ruby example, and place it towards the top of the JavaScript file:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="fu">$</span>(<span class="kw">function</span>() {
+  CAROUSEL_TRANSITION_TIME = <span class="dv">10000</span>;
+
+  <span class="kw">if</span>(<span class="ot">location</span>.<span class="fu">hash</span> &amp;&amp; <span class="ot">location</span>.<span class="ot">hash</span>.<span class="fu">indexOf</span>(<span class="st">&quot;image&quot;</span>) &gt; -<span class="dv">1</span>) {
+    <span class="co">// more code</span></code></pre>
+<p>And then I’d replace all occurences of <code>10000</code> in the code with <code>CAROUSEL_TRANSITION_TIME</code>:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> timeout = <span class="fu">setTimeout</span>(<span class="kw">function</span>() {
+  <span class="fu">$</span>(<span class="st">&quot;.left&quot;</span>).<span class="fu">trigger</span>(<span class="st">&quot;click&quot;</span>);
+}, CAROUSEL_TRANSITION_TIME);</code></pre>
+<p>And similarly in the other two places it occurs.</p>
+<p>By doing this we’ve definitely made this code more maintainable. Say the client turns up and wants the value changed. Now we’ve just one value to change, instead of three. Try to get into the habit of defining things as constants early. You can always remove the constant if you end up using it once, but it’s a good practice to get into if you find yourself referring to the same value over and over again.</p>
+<p>I&gt; Remember that constants should never be altered - in languages with actual support for constants, you are unable to edit them, you should treat your makeshift JavaScript constants equally.</p>
+<h2 id="caching-selectors">Caching selectors</h2>
+<p>This is something that everybody <em>should</em> do but people don’t always do it (I know I’m guilty). jQuery makes it so easy to quickly query the DOM for something that it’s easy to just keep doing it and pay no attention to if you’ve done that previously or not. The common arguement for this is largely performance. Whilst there is an obvious performance increase if you can avoid doing something mutliple times, I would argue that today the main reason behind this should be the maintainability of your code. In the previous section we just swapped out occurences of <code>10000</code> with a constant which took us from 3 changes down to 1 if that number should change.</p>
+<h3 id="selector-abuse">Selector Abuse</h3>
+<p>Take a look at the carousel code and selectors that come up time and time again. There’s not too many unique selectors but they all occur multiple times:</p>
+<ul>
+<li><code>ul</code> (5 times)</li>
+<li><code>.controls span</code> (5 times)</li>
+<li><code>.left</code> (4 times)</li>
+<li><code>.right</code> (once)</li>
+</ul>
+<p>A&gt; If you’re thinking that <code>.control span</code> isn’t the best selector to use, you’d be right. We’ll be taking a closer look at selectors in Chapter 4.</p>
+<h3 id="quick-win-number-4">Quick Win Number 4</h3>
+<p>The fix for this is simple, and I’m sure you already know what’s coming up. <strong>Cache those selectors!</strong>.</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> ul = <span class="fu">$</span>(<span class="st">&quot;ul&quot;</span>);
+<span class="kw">var</span> controlText = <span class="fu">$</span>(<span class="st">&quot;.controls span&quot;</span>);
+<span class="kw">var</span> leftLink = <span class="fu">$</span>(<span class="st">&quot;.left&quot;</span>);
+<span class="kw">var</span> rightLink = <span class="fu">$</span>(<span class="st">&quot;.right&quot;</span>);</code></pre>
+<p>Now go through and replace all occurences of each selector with the relevant variable. What we’ve achieved here is a much easier job, should any of these selectors change. If you take anything away from this section, make it be this:</p>
+<p><strong>Anything that could change should only be referenced <em>once</em> in your code</strong>.</p>
+<p>Make changes and alterations as frictionless as possible and everyone’s happy.</p>
+<h2 id="functions">functions</h2>
+<p>We’re going to look more in depth at functions in a later chapter, where we’ll discuss their usage and some technical details in depth. This section can serve as a precursor to that.</p>
+<h3 id="dont-be-afraid">Don’t be afraid!</h3>
+<p>A lot of people I talk to our teach seem wary of using functions, like they come with some huge cost that people can’t afford. In other communities like the Ruby one (which I’ll reference purely because it’s the one I’m most familiar with) it’s very common to see posts heavily advocating using methods in Ruby. Ben Orenstein talks heavily about how he’s incredibly agressive at abstracting code into new methods and having methods of extremely short length. I agree with Ben’s approach entirely we can certainly take some of what he says and apply it to our code.</p>
+<h3 id="quick-win-number-5">Quick Win Number 5</h3>
+<p>As I said, we’ll go much more into this later, but for now let’s look at one quick example. This very line crops up four times:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="ot">controlText</span>.<span class="fu">text</span>(<span class="st">&quot;Current: &quot;</span> + (currentImage + <span class="dv">1</span>));</code></pre>
+<p>By abstracting this line into its own function we can gain a large amount:</p>
+<ol type="1">
+<li><em>Maintainability</em>. This code contains something that very much could change - the text that we put into the page to show the user what number they are on. Right now, that change would have to be made in four places.</li>
+<li><em>Readability</em>. If you extract code into a function and name that function well, it’s then less code for a developer to have to read to understand the functionality. If, instead of the line above, we just had a call to <code>updateControlText()</code>, I can understand what that means <em>instantly</em>, and move on. I can understand what that means a lot quicker than I can understand what <code>controlText.text(&quot;Current: &quot; + (currentImage + 1));</code> means.</li>
+<li>Plus, it’s a first step towards properly structuring our code, something we’ll also look into in more detail later.</li>
+</ol>
+<p>Let’s make the change. At the top of the code, just below all your selector variables, add the function:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> updateControlText = <span class="kw">function</span>() {
+  <span class="ot">controlText</span>.<span class="fu">text</span>(<span class="st">&quot;Current: &quot;</span> + (currentImage + <span class="dv">1</span>));
+};</code></pre>
+<p>And then we can update the code to make use of it:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="ot">ul</span>.<span class="fu">animate</span>({
+  <span class="st">&quot;margin-left&quot;</span>: number * -<span class="dv">300</span>
+}, <span class="kw">function</span>() {
+  currentImage = number;
+  <span class="fu">updateControlText</span>();
+});</code></pre>
+<p>(And in the other three locations too).</p>
+<h2 id="summary">Summary</h2>
+<p>With that change we’ve made <strong>five</strong> really quick and simple changes that have already improved our code hugely, with very lttie time spent making them. As you get used to spotting these problems and fixing them, you’ll find it becomes almost second nature to make them all the time, without thinking.</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="fu">$</span>(<span class="kw">function</span>() {
+  <span class="kw">var</span> CAROUSEL_TRANSITION_TIME = <span class="dv">10000</span>;
+  <span class="kw">var</span> ul = <span class="fu">$</span>(<span class="st">&quot;ul&quot;</span>);
+  <span class="kw">var</span> controlText = <span class="fu">$</span>(<span class="st">&quot;.controls span&quot;</span>);
+  <span class="kw">var</span> leftLink = <span class="fu">$</span>(<span class="st">&quot;.left&quot;</span>);
+  <span class="kw">var</span> rightLink = <span class="fu">$</span>(<span class="st">&quot;.right&quot;</span>);
+  
+  <span class="kw">var</span> updateControlText = <span class="kw">function</span>() {
+    <span class="ot">controlText</span>.<span class="fu">text</span>(<span class="st">&quot;Current: &quot;</span> + (currentImage + <span class="dv">1</span>));
+  };
+  
+  <span class="kw">if</span>(<span class="ot">location</span>.<span class="fu">hash</span> &amp;&amp; <span class="ot">location</span>.<span class="ot">hash</span>.<span class="fu">indexOf</span>(<span class="st">&quot;image&quot;</span>) &gt; -<span class="dv">1</span>) {
+    <span class="kw">var</span> number = <span class="fu">parseInt</span>(<span class="ot">location</span>.<span class="ot">hash</span>.<span class="fu">charAt</span>(<span class="ot">location</span>.<span class="ot">hash</span>.<span class="fu">length</span> -<span class="dv">1</span>));
+    <span class="ot">ul</span>.<span class="fu">animate</span>({
+      <span class="st">&quot;margin-left&quot;</span>: number * -<span class="dv">300</span>
+    }, <span class="kw">function</span>() {
+      currentImage = number;
+      <span class="fu">updateControlText</span>();
+    });
+  }
+  <span class="kw">var</span> timeout = <span class="fu">setTimeout</span>(<span class="kw">function</span>() {
+    <span class="ot">leftLink</span>.<span class="fu">trigger</span>(<span class="st">&quot;click&quot;</span>);
+  }, CAROUSEL_TRANSITION_TIME);
+  
+  <span class="kw">var</span> currentImage = <span class="dv">0</span>;
+  <span class="ot">leftLink</span>.<span class="fu">on</span>(<span class="st">&quot;click&quot;</span>, <span class="kw">function</span>(event) {
+    <span class="ot">event</span>.<span class="fu">preventDefault</span>();
+    <span class="fu">clearTimeout</span>(timeout);
+    <span class="kw">if</span>(currentImage == <span class="fu">$</span>(<span class="st">&quot;li&quot;</span>).<span class="fu">length</span> - <span class="dv">1</span>) {
+      <span class="ot">ul</span>.<span class="fu">animate</span>({
+        <span class="st">&quot;margin-left&quot;</span>: <span class="dv">0</span>
+      }, <span class="kw">function</span>() {
+        currentImage = <span class="dv">0</span>;
+        <span class="fu">updateControlText</span>();
+      });
+    } <span class="kw">else</span> {
+      <span class="ot">ul</span>.<span class="fu">animate</span>({
+        <span class="st">&quot;margin-left&quot;</span>: <span class="st">&quot;-=300px&quot;</span>
+      }, <span class="kw">function</span>() {
+        currentImage+=<span class="dv">1</span>;
+        <span class="fu">updateControlText</span>();
+      });
+    }
+    timeout = <span class="fu">setTimeout</span>(<span class="kw">function</span>() {
+      <span class="ot">leftLink</span>.<span class="fu">trigger</span>(<span class="st">&quot;click&quot;</span>);
+    }, CAROUSEL_TRANSITION_TIME);
+  });
+  
+  <span class="ot">rightLink</span>.<span class="fu">on</span>(<span class="st">&quot;click&quot;</span>, <span class="kw">function</span>(event) {
+    <span class="ot">event</span>.<span class="fu">preventDefault</span>();
+    <span class="fu">clearTimeout</span>(timeout);
+    <span class="kw">if</span>(currentImage == <span class="dv">0</span>) {
+      <span class="ot">ul</span>.<span class="fu">animate</span>({
+        <span class="st">&quot;margin-left&quot;</span>: (<span class="fu">$</span>(<span class="st">&quot;li&quot;</span>).<span class="fu">length</span> - <span class="dv">1</span>) * -<span class="dv">300</span>
+      }, <span class="kw">function</span>() {
+        currentImage = <span class="fu">$</span>(<span class="st">&quot;li&quot;</span>).<span class="fu">length</span> - <span class="dv">1</span>;
+        <span class="fu">updateControlText</span>();
+      });
+    } <span class="kw">else</span> {
+      <span class="ot">ul</span>.<span class="fu">animate</span>({
+        <span class="st">&quot;margin-left&quot;</span>: <span class="st">&quot;+=300px&quot;</span>
+      }, <span class="kw">function</span>() {
+        currentImage-=<span class="dv">1</span>;
+        <span class="fu">updateControlText</span>();
+      });
+    }
+    timeout = <span class="fu">setTimeout</span>(<span class="kw">function</span>() {
+      <span class="ot">leftLink</span>.<span class="fu">trigger</span>(<span class="st">&quot;click&quot;</span>);
+    }, CAROUSEL_TRANSITION_TIME);
+  });
+});</code></pre>
+<p>In the next chapter we will look more in depth at a smaller block of code I wrote recently that’s absolutely terrible, and see if we can’t improve it.</p>
+<h1 id="tale-3-async-abominations">Tale 3: Async Abominations</h1>
+<p>The code for this example comes directly from a project I was working on recently. I was building a NodeJS powered API, and as part of that, needed a way of validating parameters that were passed as query strings in the API request. Every single request needs to be passed a <code>token</code> parameter, which is matched to the token of a user in the database, and some requests take a <code>userId</code> parameter, along with a token. In the case that both the token and userId are passed in, we validate that the token is the token for that specific user. In the case wehre we just take in a token, we validate that the token is valid, and exists in our database.</p>
+<p>The API has many routes, so I wanted to abstract this into a function, which I called <code>validateParamsExist</code>. It is used like so:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="fu">validateParamsExist</span>([<span class="st">&#39;userId&#39;</span>, <span class="st">&#39;token&#39;</span>, <span class="st">&#39;foo&#39;</span>], req, res, <span class="kw">function</span>(requestIsValid) {
+  <span class="kw">if</span>(requestIsValid) {
+    <span class="co">// all parameters were passed</span>
+  } <span class="kw">else</span> {
+    <span class="co">// something went wrong</span>
+  }
+});</code></pre>
+<p>The function takes four arguments: - an array of parameters to ensure exist - the ExpressJS request object (don’t worry if you don’t know what it is, all you need to know is that it stores all the information about the request) - the ExpressJS response object (this is what we use to return data from the API) - a callback function, which is called once the validation is complete with a single argument, which is <code>true</code> if the validations passed, and <code>false</code> if it did not.</p>
+<p>It’s also important to note that the ExpressJS request object (in the code, I refer to it as <code>req</code>), stores the parameters that we got with the URL in an object, which is stored in <code>req.query</code>. So if I made a request that looked like this: <code>http://somesite.com/foo?name=jack&amp;id=123</code>, <code>req.query</code> would look like so:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="ot">req</span>.<span class="fu">query</span> = {
+  <span class="dt">name</span>: <span class="st">&#39;jack&#39;</span>,
+  <span class="dt">id</span>: <span class="st">&#39;123&#39;</span>
+};</code></pre>
+<p>The challenge here and why this refactor offers a different challenge to the others is because it’s asynchronous. It performs tasks asynchronously and hence it’s a bit more of an effort to pull pieces out. The basic idea for the implementation of this function is as follows:</p>
+<ol type="1">
+<li>Loop over every parameter the user is expecting, and make sure it exists</li>
+<li>If the parameter is <code>token</code>, do some extra validation (as explained above). The exact extra validation to be done depends on if we also have a <code>userId</code> parameter or not.</li>
+</ol>
+<h2 id="the-code">The code</h2>
+<p>Rather than show you the starting code, which is badly written and tough to understand, I’m going to show you the finished code first. This is what my refactoring lead me to:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> matchTokenToUser = <span class="kw">function</span>(token, userId, errors, done) {
+  <span class="co">// method for making sure a token matches a user</span>
+}
+
+<span class="kw">var</span> ensureTokenExists = <span class="kw">function</span>(token, errors, done) {
+  <span class="co">// method for ensuring a token exists</span>
+};
+
+<span class="kw">var</span> noParamsPassed = <span class="kw">function</span>(req, res) {
+  <span class="kw">if</span>(<span class="ot">req</span>.<span class="fu">query</span>) {
+    <span class="kw">return</span> <span class="kw">false</span>;
+  } <span class="kw">else</span> {
+    <span class="ot">res</span>.<span class="fu">json</span>({ <span class="dt">errors</span>: [<span class="st">&#39;no parameters supplied&#39;</span>] });
+    <span class="kw">return</span> <span class="kw">true</span>;
+  }
+};
+
+<span class="kw">var</span> checkTokenAndIds = <span class="kw">function</span>(req, errors, cb) {
+  <span class="kw">var</span> token = <span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">token</span>;
+  <span class="kw">var</span> userId = <span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">userId</span>;
+  <span class="kw">if</span>(token) {
+    <span class="kw">if</span>(userId) {
+      <span class="fu">matchTokenToUser</span>(token, userId, errors, cb);
+    } <span class="kw">else</span> {
+      <span class="fu">ensureTokenExists</span>(token, errors, cb);
+    }
+  } <span class="kw">else</span> {
+    <span class="fu">cb</span>();
+  }
+};
+
+<span class="kw">var</span> validateParamsExist = <span class="kw">function</span>(params, req, res, cb) {
+  <span class="kw">if</span>(<span class="fu">noParamsPassed</span>(req, res)) <span class="kw">return</span> <span class="fu">cb</span>(<span class="kw">false</span>);
+  
+  <span class="kw">var</span> errors = [];
+  <span class="ot">params</span>.<span class="fu">forEach</span>(<span class="kw">function</span>(p) {
+    <span class="kw">if</span>(!<span class="ot">req</span>.<span class="fu">query</span>[p]) <span class="ot">errors</span>.<span class="fu">push</span>(<span class="st">&#39;parameter &#39;</span> + p + <span class="st">&#39; is required&#39;</span>);
+  });
+  
+  <span class="fu">checkTokenAndIds</span>(req, errors, <span class="kw">function</span>() {
+    <span class="kw">if</span>(<span class="ot">errors</span>.<span class="fu">length</span> &gt; <span class="dv">0</span>) {
+      <span class="ot">res</span>.<span class="fu">json</span>({ <span class="dt">errors</span>: errors });
+      <span class="kw">return</span> <span class="fu">cb</span>(<span class="kw">false</span>);
+    } <span class="kw">else</span> {
+      <span class="kw">return</span> <span class="fu">cb</span>(<span class="kw">true</span>);
+    }
+  });
+};</code></pre>
+<p>Have a read through the code, starting with the <code>validateParamsExist</code> method, and see if it makes sense. I have left some implementation details of functions out, because it plays no part in the refactoring (the method we’ll start with shortly also has <code>ensureTokenExists</code> and <code>matchTokenToUser</code>, too).</p>
+<p>Stepping through the <code>validateParamsExist</code> method, here’s what it does:</p>
+<ol type="1">
+<li>If no parameters at all were passed, call the callback and pass in <code>false</code>, because the validation failed.</li>
+<li>Go through each parameter we are expecting, and make sure that it actually exists. If it doesn’t, store an error in the <code>errors</code> array.</li>
+<li>Check to see if the token and id parameters were passed, and ensure that they are as expected.</li>
+<li>Once the checking of tokens and id are complete, check to see if the <code>errors</code> array has any items. If it does, use <code>res.json</code> to return those errors from the API, and call the callback with <code>false</code>, because the validation failed.</li>
+<li>Else, if we have no errors, call the callback with <code>true</code>, because the validation must have passed.</li>
+</ol>
+<h2 id="back-to-the-beginning">Back to the beginning</h2>
+<p>I showed you the finished version first because it’s readable and easy to digest what is going on, everything the first implementation isn’t. What we’ll do now is look at the pre-refactoring code and then step through the refactorings I made to get to the above code. Brace yourself, because here is the previous version:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> matchTokenToUser = <span class="kw">function</span>(token, userId, errors, done) {
+  <span class="co">// implementation irrelevant</span>
+}
+
+<span class="kw">var</span> ensureTokenExists = <span class="kw">function</span>(token, errors, done) {
+  <span class="co">// implementation irrelevant</span>
+};
+
+<span class="kw">var</span> validateParamsExist = <span class="kw">function</span>(params, req, res, cb) {
+  <span class="kw">if</span>(!<span class="ot">req</span>.<span class="fu">query</span>) {
+    <span class="ot">res</span>.<span class="fu">json</span>({ <span class="dt">errors</span>: [<span class="st">&#39;no parameters supplied&#39;</span>] });
+    <span class="kw">return</span> <span class="fu">cb</span>(<span class="kw">false</span>);
+  } <span class="kw">else</span> {
+    <span class="kw">var</span> errors = [];
+    <span class="ot">async</span>.<span class="fu">each</span>(params, <span class="kw">function</span>(p, callback) {
+      <span class="kw">if</span>(!<span class="ot">req</span>.<span class="fu">query</span>[p]) {
+        <span class="ot">errors</span>.<span class="fu">push</span>(<span class="st">&#39;parameter &#39;</span> + p + <span class="st">&#39; is required&#39;</span>);
+        <span class="fu">callback</span>();
+      } <span class="kw">else</span> {
+        <span class="kw">if</span>(p === <span class="st">&#39;token&#39;</span> &amp;&amp; <span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">token</span>) {
+          <span class="kw">if</span>(<span class="ot">params</span>.<span class="fu">indexOf</span>(<span class="st">&#39;userId&#39;</span>) &gt; -<span class="dv">1</span> &amp;&amp; <span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">userId</span>) {
+            <span class="fu">matchTokenToUser</span>(<span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">token</span>, <span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">userId</span>, errors, callback);
+          } <span class="kw">else</span> {
+            <span class="fu">ensureTokenExists</span>(<span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">token</span>, errors, callback);
+          }
+        } <span class="kw">else</span> {
+          <span class="fu">callback</span>();
+        }
+      }
+    }, <span class="kw">function</span>(err) {
+      <span class="kw">if</span>(<span class="ot">errors</span>.<span class="fu">length</span> &gt; <span class="dv">0</span>) {
+        <span class="ot">res</span>.<span class="fu">json</span>({ <span class="dt">errors</span>: errors });
+        <span class="kw">return</span> <span class="fu">cb</span>(<span class="kw">false</span>);
+      } <span class="kw">else</span> {
+        <span class="kw">return</span> <span class="fu">cb</span>(<span class="kw">true</span>);
+      }
+    });
+  };
+}</code></pre>
+<p>Take a moment to read through that and see what’s going on. The good news is it can’t get any worse than this - things are only going to get better from here!</p>
+<h2 id="abstracting-functions">Abstracting functions</h2>
+<p>Before I even begin to look at the main block of code, that starts with the call to <code>async.each</code>, I like to immediately abstract out small blocks into functions. This is the kind of change that I might undo at a later point, but I find it really helps as a starting point to just split one large method up into a bunch of smaller functions if possible. The first bit we can do that for is the first part of our function, the <code>if(!req.query)...</code> part:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> noParamsPassed = <span class="kw">function</span>(req, res) {
+  <span class="kw">if</span>(<span class="ot">req</span>.<span class="fu">query</span>) {
+    <span class="kw">return</span> <span class="kw">false</span>;
+  } <span class="kw">else</span> {
+    <span class="ot">res</span>.<span class="fu">json</span>({ <span class="dt">errors</span>: [<span class="st">&#39;no parameters supplied&#39;</span>] });
+    <span class="kw">return</span> <span class="kw">true</span>;
+  }
+};
+
+<span class="kw">var</span> validateParamsExist = <span class="kw">function</span>(params, req, res, cb) {
+  <span class="kw">if</span>(<span class="fu">noParamsPassed</span>(req, res)) <span class="kw">return</span> <span class="fu">cb</span>(<span class="kw">false</span>);
+  <span class="kw">var</span> errors = [];
+  <span class="ot">async</span>.<span class="fu">each</span>(params, <span class="kw">function</span>(p, callback) {
+    <span class="kw">if</span>(!<span class="ot">req</span>.<span class="fu">query</span>[p]) {
+      <span class="ot">errors</span>.<span class="fu">push</span>(<span class="st">&#39;parameter &#39;</span> + p + <span class="st">&#39; is required&#39;</span>);
+      <span class="fu">callback</span>();
+    } <span class="kw">else</span> {
+      <span class="kw">if</span>(p === <span class="st">&#39;token&#39;</span> &amp;&amp; <span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">token</span>) {
+        <span class="kw">if</span>(<span class="ot">params</span>.<span class="fu">indexOf</span>(<span class="st">&#39;userId&#39;</span>) &gt; -<span class="dv">1</span> &amp;&amp; <span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">userId</span>) {
+          <span class="fu">matchTokenToUser</span>(<span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">token</span>, <span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">userId</span>, errors, callback);
+        } <span class="kw">else</span> {
+          <span class="fu">ensureTokenExists</span>(<span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">token</span>, errors, callback);
+        }
+      } <span class="kw">else</span> {
+        <span class="fu">callback</span>();
+      }
+    }
+  }, <span class="kw">function</span>(err) {
+    <span class="kw">if</span>(<span class="ot">errors</span>.<span class="fu">length</span> &gt; <span class="dv">0</span>) {
+      <span class="ot">res</span>.<span class="fu">json</span>({ <span class="dt">errors</span>: errors });
+      <span class="kw">return</span> <span class="fu">cb</span>(<span class="kw">false</span>);
+    } <span class="kw">else</span> {
+      <span class="kw">return</span> <span class="fu">cb</span>(<span class="kw">true</span>);
+    }
+  });
+}</code></pre>
+<p>Doing this also means we can get rid of the <code>if(!req.query)</code> conditional that wrapped most of the body of the <code>validateParamsExist</code> method. I find exiting early is preferable to wrapping functions in large conditionals. These are what we call <strong>guard clauses</strong> - a conditional which checks something that is required for the function to be able to run. If it’s not there, it’s best to figure it out right away and ditch out early. Some argue that functions having multiple returns makes them unclear, but I’d much rather that then have large conditionals wrapping functions. Those are much more unclear, in my opinion.</p>
+<p>The next abstraction is to pull out the code that checks for the existance of <code>token</code> and/or <code>userId</code> parameters.</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> checkTokenAndIds = <span class="kw">function</span>(p, req, errors, callback) {
+  <span class="kw">if</span>(p === <span class="st">&#39;token&#39;</span> &amp;&amp; <span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">token</span>) {
+    <span class="kw">if</span>(<span class="ot">params</span>.<span class="fu">indexOf</span>(<span class="st">&#39;userId&#39;</span>) &gt; -<span class="dv">1</span> &amp;&amp; <span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">userId</span>) {
+      <span class="fu">matchTokenToUser</span>(<span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">token</span>, <span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">userId</span>, errors, callback);
+    } <span class="kw">else</span> {
+      <span class="fu">ensureTokenExists</span>(<span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">token</span>, errors, callback);
+    }
+  } <span class="kw">else</span> {
+    <span class="fu">callback</span>();
+  }
+};
+
+<span class="co">// left out noParamsPassed fn so this code takes up less room</span>
+
+<span class="kw">var</span> validateParamsExist = <span class="kw">function</span>(params, req, res, cb) {
+  <span class="kw">if</span>(<span class="fu">noParamsPassed</span>(req, res)) <span class="kw">return</span> <span class="fu">cb</span>(<span class="kw">false</span>);
+  <span class="kw">var</span> errors = [];
+  <span class="ot">async</span>.<span class="fu">each</span>(params, <span class="kw">function</span>(p, callback) {
+    <span class="kw">if</span>(!<span class="ot">req</span>.<span class="fu">query</span>[p]) {
+      <span class="ot">errors</span>.<span class="fu">push</span>(<span class="st">&#39;parameter &#39;</span> + p + <span class="st">&#39; is required&#39;</span>);
+      <span class="fu">callback</span>();
+    } <span class="kw">else</span> {
+      <span class="fu">checkTokenAndIds</span>(p, req, errors, callback);
+    }
+  }, <span class="kw">function</span>(err) {
+    <span class="kw">if</span>(<span class="ot">errors</span>.<span class="fu">length</span> &gt; <span class="dv">0</span>) {
+      <span class="ot">res</span>.<span class="fu">json</span>({ <span class="dt">errors</span>: errors });
+      <span class="kw">return</span> <span class="fu">cb</span>(<span class="kw">false</span>);
+    } <span class="kw">else</span> {
+      <span class="kw">return</span> <span class="fu">cb</span>(<span class="kw">true</span>);
+    }
+  });
+}</code></pre>
+<p>The <code>checkTokenAndIds</code> is far from a perfect function, and later we will refactor it. However, once we get to the stage where we’ve pulled code out into functions, we can now digest <code>validateParamsExist</code> much easier.</p>
+<p>When I started to look at this code, the first thing I spotted was how all of this code is wrapped within an <code>async.each</code> call. This is part of the fantastic <a href="https://github.com/caolan/async">async</a> library. <code>async.each</code> offers a way to loop over an array and perform some asynchronous code for each, and then run some other code once all items have been looped over. The usage of it above though is far from sensible:</p>
+<ol type="1">
+<li>The first part of the <code>async.each</code>, which checks for the existant of a parameter, is not asynchronous.</li>
+<li>The second part, which checks the validity of any token or userId params, only needs to run once, not every time.</li>
+</ol>
+<p>It turns out that the only part of this code which does need to run in a loop is the parameter existance check, and that’s not asynchronous. We can run the code that checks for tokens and ids only once, so why is it in a loop?! (As an aside, when I wrote this code the first time I didn’t spot this. Looking back, I’m not sure what I was thinking!).</p>
+<p>Making the first step of changes leaves us with code that looks like this:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> validateParamsExist = <span class="kw">function</span>(params, req, res, cb) {
+  <span class="kw">if</span>(<span class="fu">noParamsPassed</span>(req, res)) <span class="kw">return</span> <span class="fu">cb</span>(<span class="kw">false</span>);
+  <span class="kw">var</span> errors = [];
+  <span class="ot">params</span>.<span class="fu">forEach</span>(<span class="kw">function</span>(p) {
+    <span class="kw">if</span>(!<span class="ot">req</span>.<span class="fu">query</span>[p]) <span class="ot">errors</span>.<span class="fu">push</span>(<span class="st">&#39;parameter &#39;</span> + p + <span class="st">&#39; is required&#39;</span>);
+  });
+
+  <span class="co">// need to checkTokenAndIds next</span>
+  <span class="co">//...</span>
+}</code></pre>
+<p>The signature of the <code>checkTokenAndIds</code> function needs to change somewhat now. Previously we passed in the current parameter, but now we just need to give it all the parameters, our array of errors, and a function to call when it’s finished its checks. Here’s the final version of the <code>checkTokenAndIds</code> method I came up with:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> checkTokenAndIds = <span class="kw">function</span>(req, errors, cb) {
+  <span class="kw">var</span> token = <span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">token</span>;
+  <span class="kw">var</span> userId = <span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">userId</span>;
+  <span class="kw">if</span>(token) {
+    <span class="kw">if</span>(userId) {
+      <span class="fu">matchTokenToUser</span>(token, userId, errors, cb);
+    } <span class="kw">else</span> {
+      <span class="fu">ensureTokenExists</span>(token, errors, cb);
+    }
+  } <span class="kw">else</span> {
+    <span class="fu">cb</span>();
+  }
+};</code></pre>
+<p>Don’t worry about the implementation of <code>matchTokenToUser</code> or <code>ensureTokenExists</code> - they are both simple methods that just run some database queries, but they have no effect on this chapter. Notice how this method tells a story very effectively, and it’s easy to go down it line by line and see what’s happening, and follow the story. We can now go and add this method back into <code>validateParamsExist</code>:</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> validateParamsExist = <span class="kw">function</span>(params, req, res, cb) {
+  <span class="kw">if</span>(<span class="fu">noParamsPassed</span>(req, res)) <span class="kw">return</span> <span class="fu">cb</span>(<span class="kw">false</span>);
+  <span class="kw">var</span> errors = [];
+  <span class="ot">params</span>.<span class="fu">forEach</span>(<span class="kw">function</span>(p) {
+    <span class="kw">if</span>(!<span class="ot">req</span>.<span class="fu">query</span>[p]) <span class="ot">errors</span>.<span class="fu">push</span>(<span class="st">&#39;parameter &#39;</span> + p + <span class="st">&#39; is required&#39;</span>);
+  });
+
+  <span class="fu">checkTokenAndIds</span>(req, errors, <span class="kw">function</span>() {
+    <span class="kw">if</span>(<span class="ot">errors</span>.<span class="fu">length</span> &gt; <span class="dv">0</span>) {
+      <span class="ot">res</span>.<span class="fu">json</span>({ <span class="dt">errors</span>: errors });
+      <span class="kw">return</span> <span class="fu">cb</span>(<span class="kw">false</span>);
+    } <span class="kw">else</span> {
+      <span class="kw">return</span> <span class="fu">cb</span>(<span class="kw">true</span>);
+    }
+  });
+}</code></pre>
+<p>And we’re done! This example was slightly different to previous examples - whilst the previous two chapters had code that was pefectly OK but had potential for some improvement, this code was just plain misleading, poorly constructed and badly written. Imagine if you had to make a change to the validation logic, and you had this block of code as your starting point. Do you think you could do it easily? I’m pretty sure I couldn’t.</p>
+<pre class="sourceCode javascript"><code class="sourceCode javascript"><span class="kw">var</span> validateParamsExist = <span class="kw">function</span>(params, req, res, cb) {
+  <span class="kw">if</span>(!<span class="ot">req</span>.<span class="fu">query</span>) {
+    <span class="ot">res</span>.<span class="fu">json</span>({ <span class="dt">errors</span>: [<span class="st">&#39;no parameters supplied&#39;</span>] });
+    <span class="kw">return</span> <span class="fu">cb</span>(<span class="kw">false</span>);
+  } <span class="kw">else</span> {
+    <span class="kw">var</span> errors = [];
+    <span class="ot">async</span>.<span class="fu">each</span>(params, <span class="kw">function</span>(p, callback) {
+      <span class="kw">if</span>(!<span class="ot">req</span>.<span class="fu">query</span>[p]) {
+        <span class="ot">errors</span>.<span class="fu">push</span>(<span class="st">&#39;parameter &#39;</span> + p + <span class="st">&#39; is required&#39;</span>);
+        <span class="fu">callback</span>();
+      } <span class="kw">else</span> {
+        <span class="kw">if</span>(p === <span class="st">&#39;token&#39;</span> &amp;&amp; <span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">token</span>) {
+          <span class="kw">if</span>(<span class="ot">params</span>.<span class="fu">indexOf</span>(<span class="st">&#39;userId&#39;</span>) &gt; -<span class="dv">1</span> &amp;&amp; <span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">userId</span>) {
+            <span class="fu">matchTokenToUser</span>(<span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">token</span>, <span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">userId</span>, errors, callback);
+          } <span class="kw">else</span> {
+            <span class="fu">ensureTokenExists</span>(<span class="ot">req</span>.<span class="ot">query</span>.<span class="fu">token</span>, errors, callback);
+          }
+        } <span class="kw">else</span> {
+          <span class="fu">callback</span>();
+        }
+      }
+    }, <span class="kw">function</span>(err) {
+      <span class="kw">if</span>(<span class="ot">errors</span>.<span class="fu">length</span> &gt; <span class="dv">0</span>) {
+        <span class="ot">res</span>.<span class="fu">json</span>({ <span class="dt">errors</span>: errors });
+        <span class="kw">return</span> <span class="fu">cb</span>(<span class="kw">false</span>);
+      } <span class="kw">else</span> {
+        <span class="kw">return</span> <span class="fu">cb</span>(<span class="kw">true</span>);
+      }
+    });
+  };
+}</code></pre>
+<p>Compare that to the code we ended up with after sitting back, carefully going through the method to see exactly what it does and how it should work. The code is cleaner, its intention is obvious, there’s less nesting and indentation (a very basic, but often useful metric) and it reads nicer.</p>
+<p>Any developer who tells you that they have never looked back over some code they’ve previously written and cringed is a liar. You’re never going to get it right first time, and the purpose of this book isn’t to try to make you to produce great code first time, but to spot where improvements can be made. Andy Appleton, a developer I’ve had the pleasure with working with, put this best when we were talking about this kind of thing one day. He said:</p>
+<blockquote>
+<p>Defer concrete decisions as late as possible - you’ll never again know less about the problem than you do right now and the correct abstraction will become clearer over time.</p>
+</blockquote>
+<p>As time goes on and you become more settled within the context of what you’re working on, refactorings, abstractions of classes and small tweaks should become easier to spot over time.</p>
+<p>https://github.com/jackfranklin/talk-architecting-breaking-borders/blob/master/architecting-bb.md#not-good</p>
 </body>
 </html>

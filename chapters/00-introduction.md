@@ -8,7 +8,7 @@ The GitHub repository for this book is here: https://github.com/jackfranklin/the
 
 ## Refactoring
 
-Before we continue I think it's important to define just what exactly I mean when I say "refactoring". Refactoring has lots of definitions, but I think my favourite and the one I stick to is that of Martin Fowler, in his [book on refactoring](http://martinfowler.com/books/refactoring.html)
+Before we continue I think it's important to define just what exactly I mean when I say "refactoring". Refactoring has lots of definitions, but I think my favourite and the one I stick to is that of Martin Fowler, in his [book on refactoring](http://martinfowler.com/books/refactoring.html):
 
 > Refactoring is a controlled technique for improving the design of an existing code base. Its essence is applying a series of small behavior-preserving transformations, each of which "too small to be worth doing". 
 
@@ -20,7 +20,7 @@ We apply small changes to the code, and do so several times, until we're left wi
 
 In his book [Professional JavaScript for Web Developers](http://www.wrox.com/WileyCDA/WroxTitle/productCd-0764579088.html), Nicholas Zakas has a brilliant definition of maintainability which cites the following characteristics: Understandable, intuitive, adaptable, extendable and debuggable. It's these traits that I hope this book will help you adhere to and aim for.
 
-## Tests
+## Tests
 
 When refactoring, you need to have confidence in the fact that you've not broken anything. Similarly, if you do break something, you need to know immediately. This is where the benefit of having tests plays a key role. The ability to run a set of tests and get immediate feedback is fantastic, and that's precisely what tests give you. It's very easy these days to get started with tests, whether you're writing Ruby, or JavaScript on the server with NodeJS, or in the browser, there are a myriad of tools available to you. This isn't a book on testing, and I could write in huge depth on the subject, so for each example in this book, you should assume that I have tested it as I've gone (in actual fact for every example there is, I did have tests everytime). If you want to refactor but don't have tests, write tests. Do not ever attempt to refactor without writing any tests. Ever.
 

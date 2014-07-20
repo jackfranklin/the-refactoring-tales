@@ -11,16 +11,15 @@ body {
   padding: 10px;
 }
 
+nav > ul > li > a {
+  font-size: 20px;
+  font-weight: bold;
+}
+
 body > h1 {
   font-size: 25px;
   background: #ddd;
   padding: 5px;
-}
-
-blockquote p {
-  font-size: 20px;
-  font-style: italic;
-  line-height: 28px;
 }
 
 pre {
@@ -43,4 +42,34 @@ code {
 pre code {
   background: #fff;
   padding: 0;
+}
+
+blockquote {
+  padding: 13px 13px 21px 15px;
+  margin-bottom: 18px;
+  font-family:georgia,serif;
+  font-style: italic;
+}
+
+blockquote:before {
+  content:"\201C";
+  font-size:40px;
+  margin-left:-10px;
+  font-family:georgia,serif;
+  color:#eee;
+}
+blockquote p {
+  font-size: 18px;
+  font-weight: 300;
+  line-height: 28px;
+  margin-bottom: 0;
+  font-style: italic;
+}
+
+a {
+  color: #0069d6;
+}
+a:hover {
+  color: #0050a3;
+  text-decoration: none;
 }
