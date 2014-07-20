@@ -54,7 +54,7 @@ To help you put this together, here is the HTML that the code is applied to. We 
 </script>
 ```
 
-There's a fair bit wrong with the JavaScript above, but it's not neccessarily bad code. It performs the tasks that are required of it. There are a couple of bugs, but as refactorers, we are not here to change the behaviour of the code. It passes the tests (in the introduction we discussed how every refactoring must be backed by tests) and our aim is to change the design, not the behaviour, and pass all the tests. I won't show the tests, as they distract from the main purpose, but rest assured I did have them when making the changes I'm about to talk through and I was careful to keep them passing.
+There's a fair bit wrong with the JavaScript above, but it's not necessarily bad code. It performs the tasks that are required of it. There are a couple of bugs, but as refactorers, we are not here to change the behaviour of the code. It passes the tests (in the introduction we discussed how every refactoring must be backed by tests) and our aim is to change the design, not the behaviour, and pass all the tests. I won't show the tests, as they distract from the main purpose, but rest assured I did have them when making the changes I'm about to talk through and I was careful to keep them passing.
 
 ## Reuse of Selectors
 The key to refactoring is to make the smallest steps you possibly can. The first problem I'd like to tackle is the reuse of selectors.
@@ -94,7 +94,7 @@ Firstly, I'll store a reference to `$(".tabs")`:
 var tabsWrapper = $(".tabs");
 ```
 
-And then I can replace every occurence of `$(".tabs")` with `tabsWrapper`:
+And then I can replace every occurrence of `$(".tabs")` with `tabsWrapper`:
 
 ```javascript
 var tabsWrapper = $(".tabs");
@@ -404,11 +404,11 @@ Before we continue, notice again how if we wanted to stop now, we could. It's so
 
 ## Merging the branches 
 
-Right now we have two branches in our code, the `if(active)` part and the event handler. I'd really like to try and get these into one, or at least make the branches as small as possible. Right now they still have duplication, they noth call `activateTab` and `activateLink`. I'd really like to abstract that out into another function, but right now the obvious step isn't that obvious. Sometimes you'll reach a point like this when you're coding, where you know waht you need to do or want to do, but the step isn't obvious. Often you'll have to make another change, to make the new change easier. In their book [Refactoring](http://refactoring.com/), Martin Fowler and Kent Beck put this nicely:
+Right now we have two branches in our code, the `if(active)` part and the event handler. I'd really like to try and get these into one, or at least make the branches as small as possible. Right now they still have duplication, they both call `activateTab` and `activateLink`. I'd really like to abstract that out into another function, but right now the obvious step isn't that obvious. Sometimes you'll reach a point like this when you're coding, where you know what you need to do or want to do, but the step isn't obvious. Often you'll have to make another change, to make the new change easier. In their book [Refactoring](http://refactoring.com/), Martin Fowler and Kent Beck put this nicely:
 
 > When you find you have to add a feature to a program, and the program's code is not structured in a convenient way to add the feature, first refactor the program to make it easy to add the feature, then add the feature.
 
-Although this quote talks about new features, what it efffectively says is that if you need to make a change, but that change is proving tough to make, make other changes such that your original change is easy.
+Although this quote talks about new features, what it effectively says is that if you need to make a change, but that change is proving tough to make, make other changes such that your original change is easy.
 
 I realised after some thinking that the bit of code making this change difficult is this bit:
 
@@ -559,4 +559,4 @@ $(".tabs").find(".tab-link").click(function() {
 });
 ```
 
-By removing duplication and making things clearer, we've ended up with a solution that is more readable, self documenting and maintainable. Notice how at first glance the two different sections of the code looked very different, but after some initial refactorings we found them actually to be near identical. This is a common occurence - often a refactor will open up new possibilities and ways of working, which is another reason to keep your refactorings small and your mind open - an improvement might not be immediately obvious at the beginning.
+By removing duplication and making things clearer, we've ended up with a solution that is more readable, self documenting and maintainable. Notice how at first glance the two different sections of the code looked very different, but after some initial refactorings we found them actually to be near identical. This is a common occurrence - often a refactor will open up new possibilities and ways of working, which is another reason to keep your refactorings small and your mind open - an improvement might not be immediately obvious at the beginning.
