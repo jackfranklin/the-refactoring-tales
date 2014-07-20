@@ -30,7 +30,8 @@ mobi: epub
 html: dir
 	pandoc -s -c style.css -t html5 --normalize --smart --toc -o refactoring-tales.html $(source) \
 		--include-before-body build/author.html \
-		--title-prefix $(title)
+		--title-prefix $(title) \
+		--include-after-body build/stats.html
 
 compress:
 	zip -r -X refactoring-tales.zip books
