@@ -1,4 +1,4 @@
-# Tale 2: Cringy Carousels
+# Tale 2: Cringey Carousels
 
 In this chapter I want to talk about the value of some "quick wins" - very simple refactorings that, when applied to a codebase, will hugely improve the readability and maintainability of the project, at very little time and effort to yourself. You may find yourself too busy to fully refactor a huge method, but with these small steps you can make large gains quickly.
 
@@ -181,11 +181,11 @@ $(function() {
 });
 ```
 
-If you were to load that up in a browser and click on the `p` element within the `div` element, what would you see in the console? You would only see the second log statement, "p got clicked". `event.stopPropagation()` _stops the event from bubbling up the DOM tree_. There are occassions when this is useful but the majority of the time, you don't want this. What you might not realise though, is that __return false; has the same effect__. `return false` has the same effect as calling `preventDefault()` and `stopPropagation()`. This can lead to nasty side effects or bugs later which can be incredibly difficult and frustrating to deal with - trust me, I've been there.
+If you were to load that up in a browser and click on the `p` element within the `div` element, what would you see in the console? You would only see the second log statement, "p got clicked". `event.stopPropagation()` _stops the event from bubbling up the DOM tree_. There are occasions when this is useful but the majority of the time, you don't want this. What you might not realise though, is that __return false; has the same effect__. `return false` has the same effect as calling `preventDefault()` and `stopPropagation()`. This can lead to nasty side effects or bugs later which can be incredibly difficult and frustrating to deal with - trust me, I've been there.
 
 ### Be Explicit
 
-So although it might take longer, it's much better to be a bit more verbose here. If you only want the default action to be prevented, call `preventDefault()`. If you want propagation to be prevented, call `stopPropagation()`. If you want them both, __don't type__ `return false;`. Be explict and type them both out:
+So although it might take longer, it's much better to be a bit more verbose here. If you only want the default action to be prevented, call `preventDefault()`. If you want propagation to be prevented, call `stopPropagation()`. If you want them both, __don't type__ `return false;`. Be explicit and type them both out:
 
 ```javascript
 event.stopPropagation();
@@ -213,7 +213,7 @@ $(".right").click(function(event) {
 
 ## on() and off()
 
-In jQuery 1.7 there was a new API introduced for binding and unbinding event handlers in the form of `on()` and `off()` to supercede the old API which was (and still is) a myriad of methods like `click()`, `hover()`, `mouseout()` along with `live()`, `bind()` and so on. This point may be a bit contentious, but I think that `on()` and `off()` are absolutely vast improvements and the fact that the entire event binding API was able to be reduced to two methods is brilliant. Of course, the old methods are not going anywhere (imagine how much code would break!) but as a rule I now will never use `click()` or similar, and will always use `on("click", function() {})`. This isn't going to bring you huge speed improvements or even gain any readability, but personally I do think it reads slightly nicer.
+In jQuery 1.7 there was a new API introduced for binding and unbinding event handlers in the form of `on()` and `off()` to supersede the old API which was (and still is) a myriad of methods like `click()`, `hover()`, `mouseout()` along with `live()`, `bind()` and so on. This point may be a bit contentious, but I think that `on()` and `off()` are absolutely vast improvements and the fact that the entire event binding API was able to be reduced to two methods is brilliant. Of course, the old methods are not going anywhere (imagine how much code would break!) but as a rule I now will never use `click()` or similar, and will always use `on("click", function() {})`. This isn't going to bring you huge speed improvements or even gain any readability, but personally I do think it reads slightly nicer.
 
 ### Quick Win Number 2
 
@@ -255,7 +255,7 @@ $(function() {
     // more code
 ```
 
-And then I'd replace all occurences of `10000` in the code with `CAROUSEL_TRANSITION_TIME`:
+And then I'd replace all occurrences of `10000` in the code with `CAROUSEL_TRANSITION_TIME`:
 
 ```javascript
 var timeout = setTimeout(function() {
@@ -271,7 +271,7 @@ I> Remember that constants should never be altered - in languages with actual su
 
 ## Caching selectors
 
-This is something that everybody _should_ do but people don't always do it (I know I'm guilty). jQuery makes it so easy to quickly query the DOM for something that it's easy to just keep doing it and pay no attention to if you've done that previously or not. The common arguement for this is largely performance. Whilst there is an obvious performance increase if you can avoid doing something mutliple times, I would argue that today the main reason behind this should be the maintainability of your code. In the previous section we just swapped out occurences of `10000` with a constant which took us from 3 changes down to 1 if that number should change.
+This is something that everybody _should_ do but people don't always do it (I know I'm guilty). jQuery makes it so easy to quickly query the DOM for something that it's easy to just keep doing it and pay no attention to if you've done that previously or not. The common argument for this is largely performance. Whilst there is an obvious performance increase if you can avoid doing something multiple times, I would argue that today the main reason behind this should be the maintainability of your code. In the previous section we just swapped out occurrences of `10000` with a constant which took us from 3 changes down to 1 if that number should change.
 
 ### Selector Abuse
 
@@ -295,7 +295,7 @@ var leftLink = $(".left");
 var rightLink = $(".right");
 ```
 
-Now go through and replace all occurences of each selector with the relevant variable. What we've achieved here is a much easier job, should any of these selectors change. If you take anything away from this section, make it be this:
+Now go through and replace all occurrences of each selector with the relevant variable. What we've achieved here is a much easier job, should any of these selectors change. If you take anything away from this section, make it be this:
 
 __Anything that could change should only be referenced _once_ in your code__.
 
@@ -307,7 +307,7 @@ We're going to look more in depth at functions in a later chapter, where we'll d
 
 ### Don't be afraid!
 
-A lot of people I talk to our teach seem wary of using functions, like they come with some huge cost  that people can't afford. In other communities like the Ruby one (which I'll reference purely because it's the one I'm most familiar with) it's very common to see posts heavily advocating using methods in Ruby. Ben Orenstein talks heavily about how he's incredibly agressive at abstracting code into new methods and having methods of extremely short length. I agree with Ben's approach entirely we can certainly take some of what he says and apply it to our code.
+A lot of people I talk to our teach seem wary of using functions, like they come with some huge cost  that people can't afford. In other communities like the Ruby one (which I'll reference purely because it's the one I'm most familiar with) it's very common to see posts heavily advocating using methods in Ruby. Ben Orenstein talks heavily about how he's incredibly aggressive at abstracting code into new methods and having methods of extremely short length. I agree with Ben's approach entirely we can certainly take some of what he says and apply it to our code.
 
 ### Quick Win Number 5
 
@@ -346,7 +346,7 @@ ul.animate({
 
 ## Summary
 
-With that change we've made __five__ really quick and simple changes that have already improved our code hugely, with very lttie time spent making them. As you get used to spotting these problems and fixing them, you'll find it becomes almost second nature to make them all the time, without thinking.
+With that change we've made __five__ really quick and simple changes that have already improved our code hugely, with very little time spent making them. As you get used to spotting these problems and fixing them, you'll find it becomes almost second nature to make them all the time, without thinking.
 
 ```javascript
 $(function() {
