@@ -26,3 +26,7 @@ When refactoring, you need to have confidence in the fact that you've not broken
 
 You should also make sure you can run your tests easily. I have mine hooked up through my editor, Vim, so I can hit a 3 key shortcut and have my tests run. Configure it however you want, and make sure it's easy to do.
 
+## Thanks
+
+There are so many people who have thanked me along the way that it would be wrong to not include some form of list of names in this book. Thanks in particular go to Addy Osmani, Drew Neil, Guy Routledge, Katja Durrani along with many more who have shaped this book since the idea formed.
+
