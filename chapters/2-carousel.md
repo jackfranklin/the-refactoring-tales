@@ -282,7 +282,7 @@ Make changes and alterations as frictionless as possible and everyone's happy.
 
 We're going to look more in depth at functions in a later chapter, where we'll discuss their usage and some technical details in depth. This section can serve as a precursor to that.
 
-A lot of people I talk to our teach seem wary of using functions, like they come with some huge cost  that people can't afford. In other communities like the Ruby one (which I'll reference purely because it's the one I'm most familiar with) it's very common to see posts heavily advocating using methods in Ruby. Ben Orenstein talks heavily about how he's incredibly aggressive at abstracting code into new methods and having methods of extremely short length. I agree with Ben's approach entirely we can certainly take some of what he says and apply it to our code.
+A lot of people I talk to seem wary of using functions, like they come with some huge cost that people can't afford. In other communities like the Ruby one (which I'll reference purely because it's the one I'm most familiar with) it's very common to see posts heavily advocating using methods in Ruby. Ben Orenstein talks heavily about how he's incredibly aggressive at abstracting code into new methods and having methods of extremely short length. I agree with Ben's approach entirely we can certainly take some of what he says and apply it to our code.
 
 As I said, we'll go much more into this later, but for now let's look at one quick example. This very line crops up four times:
 
