@@ -427,7 +427,7 @@ The fact that we have to loop over means we can't just abstract out as easily. I
 ```javascript
 var link = tabLinks.filter(function() { 
   return $(this).attr("href") === active;
-}.parent());
+}).parent();
 activateLink(link);
 ```
 
@@ -454,7 +454,7 @@ if(active) {
   activateTab(active);
   var link = tabLinks.filter(function() { 
     return $(this).attr("href") === active;
-  }.parent());
+  }).parent();
   activateLink(link);
 }
 tabLinks.click(function() {
@@ -471,7 +471,7 @@ var activateLink = function(selector) {
   $("." + activeClass).removeClass(activeClass);
   var elem = tabLinks.filter(function() { 
     return $(this).attr("href") === selector;
-  }.parent());
+  }).parent();
   $(elem).addClass(activeClass);
 };
 ```
