@@ -19,7 +19,37 @@ Else, if none of the four above conditions match, the user is allowed to subscri
 
 This is the perfect example of a function that is very easy to test. Given specific input, it will either return `true` (the user can subscribe), or `false` (the user cannot subscribe). There are a few conditions we need to make sure we adhere to, so a set of unit tests is the perfect way to do this.
 
-Let's write the first test. Here I'm using the [Jasmine testing library](http://jasmine.github.io/2.0/introduction.html), but if you prefer another, feel free to use it instead. Jasmine is just my framework of choice for testing JS on the client.
+Let's write the first test. Here I'm using the [Jasmine testing library](http://jasmine.github.io/2.0/introduction.html), but if you prefer another, feel free to use it instead. Jasmine is just my framework of choice for testing JS on the client. The actual implementation of this code was done within Angular, so in the tests there's a fair amount of setup for that, which I'm ignoring here. The best way to test drive this is to write one spec, make it pass _in the easiest way possible_, and then write the next one.
+
+Here's my first test:
+
+```js
+it('returns true if the user is not admin or owner and the cluster is public', function() {
+  var res = UserCanSubscribeService.canSubscribe({
+    id: 'abcd'
+  }, {
+    public: true,
+    admins: [],
+    subscribers: [],
+    owner: 'cdef'
+  });
+  expect(res).toEqual(true);
+});
+```
+
+Here I'm stating that the `canSubscribe` method takes two arguments: the first is the user object, which for testing purposes can just contain an ID. The second object is then the cluster that they may or may not be allowed to subscribe to. In this instance, the user is not the cluster owner, is not an admin, has not subscribed already and the cluster is public, so they are able to subscribe.
+
+The simplest implementation to make this work?
+
+```js
+UserCanSubscribeService = {};
+UserCanSubscribeService.canSubscribe = function() {
+  return true;
+}
+```
+
+The test passes, but obviously that implementation needs a bit more work doing. However the point here, even if this might seem a little pointless, is to go one test at a time and make small steps. What this does is stops you over complicating your initial approach and potentially abstracting in the wrong place. A bad abstraction is worse than no abstraction, and by waiting until you have more code and context, you are more likely to pick the right abstraction.
+
 
 ## Conclusion
 
