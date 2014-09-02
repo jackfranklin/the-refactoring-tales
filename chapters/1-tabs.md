@@ -404,7 +404,7 @@ We're really motoring now. Notice how the tabLinks event handler simply calls tw
 
 Before we continue, notice again how if we wanted to stop now, we could. It's so important to not let yourself get down a huge rabbit hole of refactoring.
 
-## Merging the branches 
+## Merging the branches
 
 Right now we have two branches in our code, the `if(active)` part and the event handler. I'd really like to try and get these into one, or at least make the branches as small as possible. Right now they still have duplication, they both call `activateTab` and `activateLink`. I'd really like to abstract that out into another function, but right now the obvious step isn't that obvious. Sometimes you'll reach a point like this when you're coding, where you know what you need to do or want to do, but the step isn't obvious. Often you'll have to make another change, to make the new change easier. In their book [Refactoring](http://refactoring.com/), Martin Fowler and Kent Beck put this nicely:
 
@@ -425,7 +425,7 @@ tabLinks.each(function() {
 The fact that we have to loop over means we can't just abstract out as easily. Instead of the `each`, we can instead use jQuery's `filter` method:
 
 ```javascript
-var link = tabLinks.filter(function() { 
+var link = tabLinks.filter(function() {
   return $(this).attr("href") === active;
 }).parent();
 activateLink(link);
@@ -452,7 +452,7 @@ var activateTab = function(tabSelector) {
 var active = location.hash;
 if(active) {
   activateTab(active);
-  var link = tabLinks.filter(function() { 
+  var link = tabLinks.filter(function() {
     return $(this).attr("href") === active;
   }).parent();
   activateLink(link);
@@ -469,7 +469,7 @@ Now, to see where the next change will come from, we need to examine a bit more 
 ```javascript
 var activateLink = function(selector) {
   $("." + activeClass).removeClass(activeClass);
-  var elem = tabLinks.filter(function() { 
+  var elem = tabLinks.filter(function() {
     return $(this).attr("href") === selector;
   }).parent();
   $(elem).addClass(activeClass);
@@ -531,7 +531,7 @@ if(active) {
   transition(active);
 }
 tabLinks.click(function() {
-  transition($(this).attr("href'));
+  transition($(this).attr("href"));
   return false;
 });
 ```
