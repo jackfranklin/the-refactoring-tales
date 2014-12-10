@@ -232,7 +232,7 @@ Although JavaScript doesn't have constants, a convention has formed that any var
 
 ```javascript
 $(function() {
-  CAROUSEL_TRANSITION_TIME = 10000;
+  var CAROUSEL_TRANSITION_TIME = 10000;
 
   if(location.hash && location.hash.indexOf("image") > -1) {
     // more code
