@@ -61,7 +61,7 @@ var EmailSender = {
   },
   parseEmailsFromCsv: function() {
     // implementation not important
-    this.emails = Parser.init(this,csv).parseEmails()
+    this.emails = Parser.init(this.csv).parseEmails()
   },
   sendEmail: function() {
     // sends email, implementation not important
@@ -103,7 +103,7 @@ var EmailSender = {
   },
   parseEmailsFromCsv: function() {
     // implementation not important
-    this.emails = Parser.init(this,csv).parseEmails()
+    this.emails = Parser.init(this.csv).parseEmails()
   },
   sendEmail: function() {
     // sends email, implementation not important
